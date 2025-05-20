@@ -2,6 +2,7 @@ package org.oryxel.gfp.packets;
 
 import org.cloudburstmc.math.vector.Vector3d;
 import org.cloudburstmc.math.vector.Vector3f;
+import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.packet.PlayerAuthInputPacket;
 import org.geysermc.geyser.entity.type.player.SessionPlayerEntity;
 import org.geysermc.mcprotocollib.network.Session;
@@ -14,6 +15,7 @@ import org.oryxel.gfp.protocol.event.MCPLPacketEvent;
 import org.oryxel.gfp.protocol.listener.BedrockPacketListener;
 import org.oryxel.gfp.protocol.listener.JavaPacketListener;
 import org.oryxel.gfp.session.CachedSession;
+import org.oryxel.gfp.util.MathUtil;
 
 public class ClientPositionPacket implements BedrockPacketListener, JavaPacketListener {
     @Override
@@ -51,7 +53,11 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
 
             event.setCancelled(true);
 
-            Vector3d offset = Vector3d.from(oldPosX - newPosX, 0, oldPosZ - newPosZ);
+            Vector3i offset = MathUtil.makeOffsetChunkSafe(Vector3d.from(oldPosX - newPosX, 0, oldPosZ - newPosZ));
+
+            newPosX = oldPosX - offset.getX();
+            newPosZ = oldPosZ - offset.getZ();
+
             session.reOffsetPlayer(newPosX, newPosZ, offset);
         }
     }
@@ -89,19 +95,23 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
 
             cached.unconfirmedTeleport = null; // No need for this anymore.
 
-            double oldX = pos.getX() + (packet.getRelatives().contains(PositionElement.X) ? entity.getPosition().getX() : 0),
-                    oldZ = pos.getZ() + (packet.getRelatives().contains(PositionElement.Z) ? entity.getPosition().getZ() : 0);
-            double newX = oldX, newZ = oldZ;
+            double realX = pos.getX() + (packet.getRelatives().contains(PositionElement.X) ? entity.getPosition().getX() : 0),
+                    realZ = pos.getZ() + (packet.getRelatives().contains(PositionElement.Z) ? entity.getPosition().getZ() : 0);
+            double newX = realX, newZ = realZ;
 
             if (Math.abs(newX) > 2000) {
-                newX = Math.sqrt(Math.abs(newX)) * Math.signum(oldX);
+                newX = Math.sqrt(Math.abs(newX)) * Math.signum(realX);
             }
 
             if (Math.abs(newZ) > 2000) {
-                newZ = Math.sqrt(Math.abs(newZ)) * Math.signum(oldZ);
+                newZ = Math.sqrt(Math.abs(newZ)) * Math.signum(realZ);
             }
 
-            cached.setOffset(Vector3d.from(oldX - newX, 0, oldZ - newZ));
+            final Vector3i oldOffset = cached.getOffset();
+            cached.setOffset(MathUtil.makeOffsetChunkSafe(Vector3d.from(realX - newX, 0, realZ - newZ)));
+
+            newX = realX - cached.getOffset().getX();
+            newZ = realZ - cached.getOffset().getZ();
 
             // I don't want to deal with relatives, too lazy brah.
             packet.getRelatives().remove(PositionElement.X);
@@ -113,6 +123,17 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
                     packet.getDeltaMovement().getX(), packet.getDeltaMovement().getY(), packet.getDeltaMovement().getZ(),
                     packet.getYRot(), packet.getXRot(), packet.getRelatives().toArray(new PositionElement[0])
             ));
+
+            // Match 1 : 1, no need to update chunks.
+            if (oldOffset.getX() == cached.getOffset().getX() && oldOffset.getY() == cached.getOffset().getY() &&
+                    oldOffset.getZ() == cached.getOffset().getZ()) {
+                return;
+            }
+
+            event.getPostTasks().add(() -> {
+                // Offset changed and the server won't do it for us... Manually update chunk.
+                cached.getChunkCache().sendChunksWithOffset(oldOffset);
+            });
         }
     }
 }

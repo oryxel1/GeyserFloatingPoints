@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.cloudburstmc.math.vector.Vector3d;
 import org.cloudburstmc.math.vector.Vector3f;
+import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.BedrockServerSession;
 import org.cloudburstmc.protocol.bedrock.packet.MoveEntityAbsolutePacket;
 import org.geysermc.geyser.session.GeyserSession;
@@ -27,7 +28,7 @@ public class CachedSession {
 
     @Getter
     @Setter
-    private Vector3d offset = Vector3d.from(0, 0 ,0);
+    private Vector3i offset = Vector3i.from(0, 0 ,0);
 
     public Vector3f rotation = Vector3f.ZERO;
 
@@ -46,7 +47,7 @@ public class CachedSession {
         this.session.disconnect(reason);
     }
 
-    public void reOffsetPlayer(double x, double z, Vector3d newOffset) {
+    public void reOffsetPlayer(double x, double z, Vector3i newOffset) {
         float posX = Float.parseFloat(Double.toString(x)), posZ = Float.parseFloat(Double.toString(z));
 
         // Silent teleport, also won't suddenly stop player velocity.
@@ -61,7 +62,7 @@ public class CachedSession {
         // Let geyser know about the new position too.
         this.session.getPlayerEntity().setPositionManual(Vector3f.from(posX, this.getSession().getPlayerEntity().getPosition().getY(), posZ));
 
-        Vector3d oldOffset = this.offset.add(0, 0 , 0);
+        Vector3i oldOffset = this.offset.add(0, 0 , 0);
         this.offset = newOffset;
 
         this.chunkCache.sendChunksWithOffset(oldOffset);

@@ -34,13 +34,13 @@ public class ChunkCache {
     private int minY;
     private int heightY;
 
-    public void sendChunksWithOffset(Vector3d oldOffset) {
+    public void sendChunksWithOffset(Vector3i oldOffset) {
         Vector3f floatingPointPosition = session.getSession().getPlayerEntity().position();
         Vector3d playerPosition = Vector3d.from(
                 Double.parseDouble(Float.toString(floatingPointPosition.getX())),
                 Double.parseDouble(Float.toString(floatingPointPosition.getY())),
                 Double.parseDouble(Float.toString(floatingPointPosition.getZ()))
-        ).add(this.session.getOffset());
+        ).add(this.session.getOffset().toDouble());
 
         // This is a bad idea...
         for (Map.Entry<Long, ChunkSection[]> entry : this.chunks.entrySet()) {
@@ -53,8 +53,7 @@ public class ChunkCache {
             int x = oldPacket.getX() << 4, z = oldPacket.getZ() << 4;
 
             // I won't like the CPU usage... Maybe abuse dimension switch or something else?
-            ChunkUtils.sendEmptyChunk(session.getSession(), GenericMath.floor(x - oldOffset.getX())
-                    >> 4, GenericMath.floor(z - oldOffset.getZ()) >> 4, true);
+            ChunkUtils.sendEmptyChunk(session.getSession(), (x - oldOffset.getX()) >> 4, (z - oldOffset.getZ()) >> 4, true);
 
             System.out.println("Chunk pos: " + x + "," + z);
             System.out.println("Player pos: "  + playerPosition + ", NonOffset=" + floatingPointPosition);

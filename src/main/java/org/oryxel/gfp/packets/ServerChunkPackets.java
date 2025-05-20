@@ -21,8 +21,8 @@ public class ServerChunkPackets implements JavaPacketListener {
             int chunkBlockX = packet.getChunkX() << 4;
             int chunkBlockZ = packet.getChunkZ() << 4;
 
-            chunkBlockX -= cached.getOffset().getFloorX();
-            chunkBlockZ -= cached.getOffset().getFloorZ();
+            chunkBlockX -= cached.getOffset().getX();
+            chunkBlockZ -= cached.getOffset().getZ();
 
             event.setPacket(new ClientboundSetChunkCacheCenterPacket(chunkBlockX >> 4, chunkBlockZ >> 4));
         }
@@ -34,8 +34,8 @@ public class ServerChunkPackets implements JavaPacketListener {
             int chunkBlockX = packet.getX() << 4;
             int chunkBlockZ = packet.getZ() << 4;
 
-            chunkBlockX -= cached.getOffset().getFloorX();
-            chunkBlockZ -= cached.getOffset().getFloorZ();
+            chunkBlockX -= cached.getOffset().getX();
+            chunkBlockZ -= cached.getOffset().getZ();
 
             event.setPacket(new ClientboundForgetLevelChunkPacket(chunkBlockX >> 4, chunkBlockZ >> 4));
         }
@@ -54,8 +54,8 @@ public class ServerChunkPackets implements JavaPacketListener {
             int chunkBlockX = packet.getX() << 4;
             int chunkBlockZ = packet.getZ() << 4;
 
-            chunkBlockX -= cached.getOffset().getFloorX();
-            chunkBlockZ -= cached.getOffset().getFloorZ();
+            chunkBlockX -= cached.getOffset().getX();
+            chunkBlockZ -= cached.getOffset().getZ();
 
             event.setPacket(new ClientboundLevelChunkWithLightPacket(
                     chunkBlockX >> 4, chunkBlockZ >> 4, packet.getChunkData(),
@@ -65,11 +65,18 @@ public class ServerChunkPackets implements JavaPacketListener {
 
         if (event.getPacket() instanceof ClientboundBlockUpdatePacket packet) {
             cached.getChunkCache().updateBlock(packet.getEntry().getPosition(), packet.getEntry().getBlock());
+
+            final BlockChangeEntry entry = packet.getEntry();
+
+            // event.setPacket(new ClientboundBlockUpdatePacket(new BlockChangeEntry(entry.getPosition().sub(cached.getOffset()), entry.getBlock())));
         }
 
         if (event.getPacket() instanceof ClientboundSectionBlocksUpdatePacket packet) {
+            int i = 0;
             for (BlockChangeEntry entry : packet.getEntries()) {
                 cached.getChunkCache().updateBlock(entry.getPosition(), entry.getBlock());
+
+                // packet.getEntries()[i] = new BlockChangeEntry(entry.getPosition().sub(cached.getOffset()), entry.getBlock());
             }
         }
 
