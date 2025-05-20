@@ -50,7 +50,7 @@ public class CachedSession {
     public void reOffsetPlayer(double x, double z, Vector3i newOffset) {
         float posX = Float.parseFloat(Double.toString(x)), posZ = Float.parseFloat(Double.toString(z));
 
-        // Silent teleport, also won't suddenly stop player velocity.
+        // Silent teleport.
         final MoveEntityAbsolutePacket packet = new MoveEntityAbsolutePacket();
         packet.setRuntimeEntityId(this.runtimeId);
         packet.setForceMove(true);

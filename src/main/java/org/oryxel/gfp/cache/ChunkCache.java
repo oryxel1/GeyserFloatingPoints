@@ -12,9 +12,12 @@ import org.cloudburstmc.math.GenericMath;
 import org.cloudburstmc.math.vector.Vector3d;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
+import org.cloudburstmc.protocol.bedrock.packet.MovePlayerPacket;
+import org.geysermc.geyser.entity.EntityDefinitions;
 import org.geysermc.geyser.level.JavaDimension;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.util.ChunkUtils;
+import org.geysermc.geyser.util.DimensionUtils;
 import org.geysermc.geyser.util.MathUtils;
 import org.geysermc.mcprotocollib.protocol.codec.MinecraftTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.ChunkSection;
@@ -42,6 +45,22 @@ public class ChunkCache {
                 Double.parseDouble(Float.toString(floatingPointPosition.getZ()))
         ).add(this.session.getOffset().toDouble());
 
+        int oldDimension = session.getSession().getBedrockDimension().bedrockId();
+
+        // Use dimension switch to quickly reset all previous chunks.
+        // Also since we can't switch to same dimension, we send a fake one THEN the real one.
+        DimensionUtils.fastSwitchDimension(session.getSession(), DimensionUtils.getTemporaryDimension(oldDimension, oldDimension));
+        DimensionUtils.fastSwitchDimension(session.getSession(), oldDimension);
+
+        session.getSession().setSpawned(true); // Manually set this again.
+
+//        MovePlayerPacket respawn = new MovePlayerPacket();
+//        respawn.setRuntimeEntityId(session.runtimeId);
+//        respawn.setMode(MovePlayerPacket.Mode.RESPAWN);
+//        respawn.setPosition(floatingPointPosition.up(EntityDefinitions.PLAYER.offset()));
+//        respawn.setRotation(session.rotation);
+//        session.cloudburstDownstream.sendPacket(respawn);
+
         // This is a bad idea...
         for (Map.Entry<Long, ChunkSection[]> entry : this.chunks.entrySet()) {
             final ClientboundLevelChunkWithLightPacket oldPacket = this.chunkPackets.get(entry.getKey());
@@ -53,7 +72,7 @@ public class ChunkCache {
             int x = oldPacket.getX() << 4, z = oldPacket.getZ() << 4;
 
             // I won't like the CPU usage... Maybe abuse dimension switch or something else?
-            ChunkUtils.sendEmptyChunk(session.getSession(), (x - oldOffset.getX()) >> 4, (z - oldOffset.getZ()) >> 4, true);
+            // ChunkUtils.sendEmptyChunk(session.getSession(), (x - oldOffset.getX()) >> 4, (z - oldOffset.getZ()) >> 4, true);
 
 //            System.out.println("Chunk pos: " + x + "," + z);
 //            System.out.println("Player pos: "  + playerPosition + ", NonOffset=" + floatingPointPosition);
