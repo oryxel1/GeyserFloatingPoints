@@ -12,6 +12,13 @@ public class MathUtil {
         return Vector3i.from(reversedX, 0, reversedZ);
     }
 
+    // Same as makeOffsetChunkSafe
+    public static Vector3i makePositionChunkSafe(Vector3i position) {
+        long l = MathUtils.chunkPositionToLong(position.getX() >> 4, position.getZ() >> 4);
+        int reversedX = getX(l) << 4, reversedZ = getZ(l) << 4;
+        return Vector3i.from(reversedX, 0, reversedZ);
+    }
+
     public static int getX(long l) {
         return (int)(l >>> 32 & 0xFFFFFFFFL);
     }

@@ -12,6 +12,9 @@ import org.oryxel.gfp.protocol.event.MCPLPacketEvent;
 import org.oryxel.gfp.protocol.listener.JavaPacketListener;
 import org.oryxel.gfp.session.CachedSession;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ServerChunkPackets implements JavaPacketListener {
     @Override
     public void packetReceived(Session session, MCPLPacketEvent event) {
@@ -63,21 +66,24 @@ public class ServerChunkPackets implements JavaPacketListener {
             ));
         }
 
+        // System.out.println(event.getPacket());
+
         if (event.getPacket() instanceof ClientboundBlockUpdatePacket packet) {
             cached.getChunkCache().updateBlock(packet.getEntry().getPosition(), packet.getEntry().getBlock());
 
             final BlockChangeEntry entry = packet.getEntry();
-
-            // event.setPacket(new ClientboundBlockUpdatePacket(new BlockChangeEntry(entry.getPosition().sub(cached.getOffset()), entry.getBlock())));
+            event.setPacket(new ClientboundBlockUpdatePacket(new BlockChangeEntry(entry.getPosition().sub(cached.getOffset()), entry.getBlock())));
         }
 
         if (event.getPacket() instanceof ClientboundSectionBlocksUpdatePacket packet) {
-            int i = 0;
+            final List<BlockChangeEntry> entries = new ArrayList<>();
             for (BlockChangeEntry entry : packet.getEntries()) {
                 cached.getChunkCache().updateBlock(entry.getPosition(), entry.getBlock());
 
-                // packet.getEntries()[i] = new BlockChangeEntry(entry.getPosition().sub(cached.getOffset()), entry.getBlock());
+                entries.add(new BlockChangeEntry(entry.getPosition().sub(cached.getOffset()), entry.getBlock()));
             }
+
+            event.setPacket(new ClientboundSectionBlocksUpdatePacket(packet.getChunkX(), packet.getChunkY(), packet.getChunkZ(), entries.toArray(new BlockChangeEntry[0])));
         }
 
         if (event.getPacket() instanceof ClientboundRespawnPacket) {
