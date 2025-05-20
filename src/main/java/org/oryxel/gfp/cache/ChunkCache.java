@@ -8,21 +8,18 @@ import lombok.RequiredArgsConstructor;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import org.cloudburstmc.math.GenericMath;
 import org.cloudburstmc.math.vector.Vector3d;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
-import org.cloudburstmc.protocol.bedrock.packet.MovePlayerPacket;
-import org.geysermc.geyser.entity.EntityDefinitions;
 import org.geysermc.geyser.level.JavaDimension;
 import org.geysermc.geyser.level.block.type.Block;
-import org.geysermc.geyser.util.ChunkUtils;
 import org.geysermc.geyser.util.DimensionUtils;
 import org.geysermc.geyser.util.MathUtils;
 import org.geysermc.mcprotocollib.protocol.codec.MinecraftTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.ChunkSection;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundLevelChunkWithLightPacket;
 import org.oryxel.gfp.session.CachedSession;
+import org.oryxel.gfp.util.DimensionUtil;
 
 import java.util.Map;
 
@@ -49,8 +46,8 @@ public class ChunkCache {
 
         // Use dimension switch to quickly reset all previous chunks.
         // Also since we can't switch to same dimension, we send a fake one THEN the real one.
-        DimensionUtils.fastSwitchDimension(session.getSession(), DimensionUtils.getTemporaryDimension(oldDimension, oldDimension));
-        DimensionUtils.fastSwitchDimension(session.getSession(), oldDimension);
+        DimensionUtil.switchDimension(session, DimensionUtils.getTemporaryDimension(oldDimension, oldDimension));
+        DimensionUtil.switchDimension(session, oldDimension);
 
         session.getSession().setSpawned(true); // Manually set this again.
 
