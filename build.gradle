@@ -1,0 +1,33 @@
+plugins {
+    id 'java'
+}
+
+group = 'org.oryxel.gjr'
+version = '1.0'
+
+repositories {
+    mavenCentral()
+    maven {
+        name = "sonatype"
+        url = "https://oss.sonatype.org/content/groups/public/"
+    }
+    maven {
+        name = "opencollab-dev"
+        url = "https://repo.opencollab.dev/main/"
+    }
+}
+
+dependencies {
+    compileOnly("org.geysermc.mcprotocollib:protocol:1.21.5-20250509.144049-29")
+    compileOnly("org.cloudburstmc.protocol:bedrock-connection:3.0.0.Beta6-20250506.012145-17")
+    compileOnly("org.geysermc.geyser:core:2.7.1-SNAPSHOT") {
+        exclude group: "com.google.code.gson", module: "gson"
+    }
+    compileOnly("it.unimi.dsi:fastutil:8.5.15")
+    compileOnly("org.projectlombok:lombok:1.18.36")
+    annotationProcessor("org.projectlombok:lombok:1.18.36")
+}
+
+test {
+    useJUnitPlatform()
+}
