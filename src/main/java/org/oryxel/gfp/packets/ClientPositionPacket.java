@@ -99,6 +99,11 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
                     realZ = pos.getZ() + (packet.getRelatives().contains(PositionElement.Z) ? entity.getPosition().getZ() : 0);
             double newX = realX, newZ = realZ;
 
+            // Too close, ignore.
+            if (entity.getPosition().distance(realX, entity.getPosition().getY(), realZ) < 0.1) {
+                return;
+            }
+
             if (Math.abs(newX) > 2000) {
                 newX = Math.sqrt(Math.abs(newX)) * Math.signum(realX);
             }

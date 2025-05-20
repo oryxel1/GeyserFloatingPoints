@@ -55,15 +55,16 @@ public class ChunkCache {
             // I won't like the CPU usage... Maybe abuse dimension switch or something else?
             ChunkUtils.sendEmptyChunk(session.getSession(), (x - oldOffset.getX()) >> 4, (z - oldOffset.getZ()) >> 4, true);
 
-            System.out.println("Chunk pos: " + x + "," + z);
-            System.out.println("Player pos: "  + playerPosition + ", NonOffset=" + floatingPointPosition);
-            System.out.println("Offset: "  + playerPosition);
-            System.out.println("Distance= " + playerPosition.distance(x, playerPosition.getY(), z));
+//            System.out.println("Chunk pos: " + x + "," + z);
+//            System.out.println("Player pos: "  + playerPosition + ", NonOffset=" + floatingPointPosition);
+//            System.out.println("Offset: "  + playerPosition);
+//            System.out.println("Distance= " + playerPosition.distance(x, playerPosition.getY(), z));
 
             // Is this correct???? I have no idea
-            if (playerPosition.distance(x, playerPosition.getY(), z) > session.getSession().getServerRenderDistance() * 16) {
-                continue;
-            }
+            // NOTE: No it is not.
+//            if (playerPosition.distance(x, playerPosition.getY(), z) > session.getSession().getServerRenderDistance() * 16) {
+//                continue;
+//            }
 
             ByteBuf oldByteBuf = Unpooled.wrappedBuffer(oldPacket.getChunkData());
             ByteBuf byteBuf = null;
