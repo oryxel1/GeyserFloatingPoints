@@ -16,11 +16,11 @@ public final class PacketEvents {
     private final List<BedrockPacketListener> bedrockListeners = new ArrayList<>();
     private final List<JavaPacketListener> javaListeners = new ArrayList<>();
 
-    public void register(final BedrockPacketListener... listener) {
+    public void registerBedrock(final BedrockPacketListener... listener) {
         this.bedrockListeners.addAll(List.of(listener));
     }
 
-    public void register(final JavaPacketListener... listener) {
+    public void registerJava(final JavaPacketListener... listener) {
         this.javaListeners.addAll(List.of(listener));
     }
 

@@ -10,8 +10,13 @@ import java.util.List;
 @Data
 public class MCPLPacketEvent {
     private final CachedSession player;
-    private final Packet packet;
+    private Packet packet;
     private boolean cancelled;
 
     private final List<Runnable> postTasks = new ArrayList<>();
+
+    public MCPLPacketEvent(CachedSession player, Packet packet) {
+        this.player = player;
+        this.packet = packet;
+    }
 }

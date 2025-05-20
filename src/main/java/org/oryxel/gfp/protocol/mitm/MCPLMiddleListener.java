@@ -26,21 +26,7 @@ public class MCPLMiddleListener extends SessionAdapter {
             listener.packetReceived(session, event);
         }
         if (!event.isCancelled()) {
-            listeners.forEach(l -> l.packetReceived(session, packet));
-        }
-
-        event.getPostTasks().forEach(Runnable::run);
-        event.getPostTasks().clear();
-    }
-
-    @Override
-    public void packetSent(Session session, Packet packet) {
-        final MCPLPacketEvent event = new MCPLPacketEvent(this.player, packet);
-        for (final JavaPacketListener listener : PacketEvents.getApi().getJavaListeners()) {
-            listener.packetSent(session, event);
-        }
-        if (!event.isCancelled()) {
-            listeners.forEach(l -> l.packetSent(session, packet));
+            listeners.forEach(l -> l.packetReceived(session, event.getPacket()));
         }
 
         event.getPostTasks().forEach(Runnable::run);
@@ -49,7 +35,25 @@ public class MCPLMiddleListener extends SessionAdapter {
 
     @Override
     public void packetSending(PacketSendingEvent event) {
-        listeners.forEach(l -> l.packetSending(event));
+        final MCPLPacketEvent mcplEvent = new MCPLPacketEvent(this.player, event.getPacket());
+        for (final JavaPacketListener listener : PacketEvents.getApi().getJavaListeners()) {
+            listener.packetSending(mcplEvent);
+            event.setPacket(mcplEvent.getPacket());
+        }
+
+        event.setCancelled(mcplEvent.isCancelled());
+
+        if (!event.isCancelled()) {
+            listeners.forEach(l -> l.packetSending(event));
+        }
+
+        mcplEvent.getPostTasks().forEach(Runnable::run);
+        mcplEvent.getPostTasks().clear();
+    }
+
+    @Override
+    public void packetSent(Session session, Packet packet) {
+        listeners.forEach(l -> l.packetSent(session, packet));
     }
 
     @Override

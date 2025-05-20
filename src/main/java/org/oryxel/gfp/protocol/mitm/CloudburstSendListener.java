@@ -38,6 +38,8 @@ public final class CloudburstSendListener extends UpstreamSession {
             // We need this to do rewind teleport.
             start.setAuthoritativeMovementMode(AuthoritativeMovementMode.SERVER_WITH_REWIND);
             start.setRewindHistorySize(20); // 20 ticks is enough.
+
+            player.runtimeId = start.getRuntimeEntityId();
         }
 
         super.sendPacket(event.getPacket());
