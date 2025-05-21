@@ -5,6 +5,7 @@ import org.oryxel.gfp.packets.client.ClientPlayerAction;
 import org.oryxel.gfp.packets.client.ClientPositionPacket;
 import org.oryxel.gfp.packets.server.ServerChunkPackets;
 import org.oryxel.gfp.packets.server.ServerEntityPackets;
+import org.oryxel.gfp.packets.server.ServerWorldPackets;
 import org.oryxel.gfp.protocol.PacketEvents;
 
 @Getter
@@ -22,6 +23,7 @@ public class GeyserFloatingPoints {
 
         PacketEvents.getApi().registerJava(new ServerChunkPackets());
         PacketEvents.getApi().registerJava(new ServerEntityPackets());
+        PacketEvents.getApi().registerJava(new ServerWorldPackets());
     }
 
     public void terminate() {

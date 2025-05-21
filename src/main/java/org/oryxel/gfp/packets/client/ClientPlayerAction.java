@@ -3,7 +3,6 @@ package org.oryxel.gfp.packets.client;
 import org.cloudburstmc.protocol.bedrock.data.*;
 import org.cloudburstmc.protocol.bedrock.packet.LevelEventPacket;
 import org.cloudburstmc.protocol.bedrock.packet.PlayerAuthInputPacket;
-import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.PlayerAction;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundBlockDestructionPacket;
@@ -18,7 +17,7 @@ import org.oryxel.gfp.session.CachedSession;
 public class ClientPlayerAction implements JavaPacketListener, BedrockPacketListener {
     @Override
     public void packetSending(MCPLPacketEvent event) {
-        final CachedSession session = event.getPlayer();
+        final CachedSession session = event.getSession();
 
         if (event.getPacket() instanceof ServerboundPlayerActionPacket packet) {
             PlayerAction exemptedAction = session.getSession().getGameMode() == GameMode.CREATIVE ? PlayerAction.START_DIGGING : PlayerAction.FINISH_DIGGING;
@@ -44,10 +43,10 @@ public class ClientPlayerAction implements JavaPacketListener, BedrockPacketList
     }
 
     @Override
-    public void packetReceived(Session session, MCPLPacketEvent event) {
+    public void packetReceived(MCPLPacketEvent event) {
         if (event.getPacket() instanceof ClientboundBlockDestructionPacket packet) {
             event.setPacket(new ClientboundBlockDestructionPacket(packet.getBreakerEntityId(),
-                    packet.getPosition().sub(event.getPlayer().getOffset()), packet.getStage()));
+                    packet.getPosition().sub(event.getSession().getOffset()), packet.getStage()));
         }
     }
 

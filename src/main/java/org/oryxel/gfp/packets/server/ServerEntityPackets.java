@@ -1,7 +1,6 @@
 package org.oryxel.gfp.packets.server;
 
 import org.cloudburstmc.math.vector.Vector3d;
-import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.*;
 import org.oryxel.gfp.protocol.event.MCPLPacketEvent;
 import org.oryxel.gfp.protocol.listener.JavaPacketListener;
@@ -9,8 +8,8 @@ import org.oryxel.gfp.session.CachedSession;
 
 public class ServerEntityPackets implements JavaPacketListener {
     @Override
-    public void packetReceived(Session javaSession, MCPLPacketEvent event) {
-        final CachedSession session = event.getPlayer();
+    public void packetReceived(MCPLPacketEvent event) {
+        final CachedSession session = event.getSession();
 
         if (event.getPacket() instanceof ClientboundAddEntityPacket packet) {
             session.getEntityCache().cacheEntity(packet.getEntityId(), Vector3d.from(packet.getX(), packet.getY(), packet.getZ()));

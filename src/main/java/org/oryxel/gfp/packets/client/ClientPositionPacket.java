@@ -5,7 +5,6 @@ import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.packet.PlayerAuthInputPacket;
 import org.geysermc.geyser.entity.type.player.SessionPlayerEntity;
-import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.PositionElement;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerPositionPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.ServerboundMoveVehiclePacket;
@@ -68,7 +67,7 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
 
     @Override
     public void packetSending(MCPLPacketEvent event) {
-        final CachedSession cached = event.getPlayer();
+        final CachedSession cached = event.getSession();
 
         if (event.getPacket() instanceof ServerboundMovePlayerPosPacket packet) {
             event.setPacket(new ServerboundMovePlayerPosPacket(
@@ -94,14 +93,14 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
     }
 
     @Override
-    public void packetReceived(Session session, MCPLPacketEvent event) {
-        final CachedSession cached = event.getPlayer();
-        final SessionPlayerEntity entity = cached.getSession().getPlayerEntity();
+    public void packetReceived(MCPLPacketEvent event) {
+        final CachedSession session = event.getSession();
+        final SessionPlayerEntity entity = session.getSession().getPlayerEntity();
 
         if (event.getPacket() instanceof ClientboundPlayerPositionPacket packet) {
             Vector3d pos = packet.getPosition();
 
-            cached.unconfirmedTeleport = null; // No need for this anymore.
+            session.unconfirmedTeleport = null; // No need for this anymore.
 
             double realX = pos.getX() + (packet.getRelatives().contains(PositionElement.X) ? entity.getPosition().getX() : 0),
                     realZ = pos.getZ() + (packet.getRelatives().contains(PositionElement.Z) ? entity.getPosition().getZ() : 0);
@@ -120,20 +119,20 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
                 newZ = Math.sqrt(Math.abs(newZ)) * Math.signum(realZ);
             }
 
-            final Vector3i oldOffset = cached.getOffset();
-            cached.setOffset(MathUtil.makeOffsetChunkSafe(Vector3d.from(realX - newX, 0, realZ - newZ)));
-            if (cached.getOffset().lengthSquared() > 0) { // Always priority 0 0 0 offset.
+            final Vector3i oldOffset = session.getOffset();
+            session.setOffset(MathUtil.makeOffsetChunkSafe(Vector3d.from(realX - newX, 0, realZ - newZ)));
+            if (session.getOffset().lengthSquared() > 0) { // Always priority 0 0 0 offset.
                 double oldOffsetX = realX - oldOffset.getX();
                 double oldOffsetZ = realZ - oldOffset.getZ();
 
                 // Old offset is still within range so there is no need to update it.
                 if (Math.abs(oldOffsetX) <= 2000 && Math.abs(oldOffsetZ) <= 2000) {
-                    cached.setOffset(oldOffset);
+                    session.setOffset(oldOffset);
                 }
             }
 
-            newX = realX - cached.getOffset().getX();
-            newZ = realZ - cached.getOffset().getZ();
+            newX = realX - session.getOffset().getX();
+            newZ = realZ - session.getOffset().getZ();
 
             // I don't want to deal with relatives, too lazy brah.
             List<PositionElement> relatives = new ArrayList<>();
@@ -151,15 +150,15 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
             ));
 
             // Match 1 : 1, no need to update chunks.
-            if (oldOffset.getX() == cached.getOffset().getX() && oldOffset.getY() == cached.getOffset().getY() &&
-                    oldOffset.getZ() == cached.getOffset().getZ()) {
+            if (oldOffset.getX() == session.getOffset().getX() && oldOffset.getY() == session.getOffset().getY() &&
+                    oldOffset.getZ() == session.getOffset().getZ()) {
                 return;
             }
 
             event.getPostTasks().add(() -> {
                 // Offset changed and the server won't do it for us... Manually update chunk, and entity position.
-                cached.getChunkCache().sendChunksWithOffset(oldOffset);
-                cached.getEntityCache().resendWithOffset();
+                session.getChunkCache().sendChunksWithOffset(oldOffset);
+                session.getEntityCache().resendWithOffset();
             });
         }
     }

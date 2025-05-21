@@ -23,7 +23,7 @@ public class MCPLMiddleListener extends SessionAdapter {
 
         final MCPLPacketEvent event = new MCPLPacketEvent(this.player, packet);
         for (final JavaPacketListener listener : PacketEvents.getApi().getJavaListeners()) {
-            listener.packetReceived(session, event);
+            listener.packetReceived(event);
         }
         if (!event.isCancelled()) {
             listeners.forEach(l -> l.packetReceived(session, event.getPacket()));
