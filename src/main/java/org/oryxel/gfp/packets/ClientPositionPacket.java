@@ -17,6 +17,9 @@ import org.oryxel.gfp.protocol.listener.JavaPacketListener;
 import org.oryxel.gfp.session.CachedSession;
 import org.oryxel.gfp.util.MathUtil;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ClientPositionPacket implements BedrockPacketListener, JavaPacketListener {
     @Override
     public void onPacketReceived(CloudburstPacketEvent event) {
@@ -128,14 +131,18 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
             newZ = realZ - cached.getOffset().getZ();
 
             // I don't want to deal with relatives, too lazy brah.
-            packet.getRelatives().remove(PositionElement.X);
-            packet.getRelatives().remove(PositionElement.Z);
+            List<PositionElement> relatives = new ArrayList<>();
+            packet.getRelatives().forEach(r -> {
+                if (r != PositionElement.X && r != PositionElement.Z) {
+                    relatives.add(r);
+                }
+            });
 
             event.setPacket(new ClientboundPlayerPositionPacket(
                     packet.getId(),
                     newX, packet.getPosition().getY(), newZ,
                     packet.getDeltaMovement().getX(), packet.getDeltaMovement().getY(), packet.getDeltaMovement().getZ(),
-                    packet.getYRot(), packet.getXRot(), packet.getRelatives().toArray(new PositionElement[0])
+                    packet.getYRot(), packet.getXRot(), relatives.toArray(new PositionElement[0])
             ));
 
             // Match 1 : 1, no need to update chunks.
