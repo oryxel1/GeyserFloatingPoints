@@ -30,6 +30,11 @@ public class ServerWorldPackets implements JavaPacketListener {
                     packet.getOffsetX(), packet.getOffsetY(), packet.getOffsetZ(), packet.getVelocityOffset(), packet.getAmount()));
         }
 
+        if (event.getPacket() instanceof ClientboundExplodePacket packet) {
+            event.setPacket(new ClientboundExplodePacket(packet.getCenter().sub(session.getOffset().toDouble()),
+                    packet.getPlayerKnockback(), packet.getExplosionParticle(), packet.getExplosionSound()));
+        }
+
         if (event.getPacket() instanceof ClientboundOpenSignEditorPacket packet) {
             event.setPacket(new ClientboundOpenSignEditorPacket(packet.getPosition().sub(session.getOffset()), packet.isFrontText()));
         }
