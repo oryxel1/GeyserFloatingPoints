@@ -157,9 +157,9 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
             }
 
             event.getPostTasks().add(() -> {
-                // Offset changed and the server won't do it for us... Manually update chunk.
+                // Offset changed and the server won't do it for us... Manually update chunk, and entity position.
                 cached.getChunkCache().sendChunksWithOffset(oldOffset);
-                cached.resendEntityPosition(oldOffset);
+                cached.getEntityCache().resendWithOffset();
             });
         }
     }

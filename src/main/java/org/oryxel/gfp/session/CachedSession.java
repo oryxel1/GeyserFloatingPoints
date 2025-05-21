@@ -9,6 +9,7 @@ import org.cloudburstmc.protocol.bedrock.packet.MoveEntityAbsolutePacket;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.mcprotocollib.network.ClientSession;
 import org.oryxel.gfp.cache.ChunkCache;
+import org.oryxel.gfp.cache.EntityCache;
 import org.oryxel.gfp.geyser.util.GeyserUtil;
 import org.oryxel.gfp.protocol.mitm.CloudburstReceiveListener;
 import org.oryxel.gfp.protocol.mitm.CloudburstSendListener;
@@ -34,6 +35,8 @@ public class CachedSession {
 
     @Getter
     private final ChunkCache chunkCache = new ChunkCache(this);
+    @Getter
+    private final EntityCache entityCache = new EntityCache(this);
 
     public CachedSession(GeyserSession session) {
         this.session = session;
@@ -43,28 +46,6 @@ public class CachedSession {
 
     public void kick(String reason) {
         this.session.disconnect(reason);
-    }
-
-    public void resendEntityPosition(final Vector3i oldOffset) {
-//        EntityCache cache = this.session.getEntityCache();
-
-//        for (Entity entity : cache.getEntities().values()) {
-//            if (entity.getGeyserId() == runtimeId) {
-//                continue;
-//            }
-//
-//            Vector3f newPosition = entity.getPosition().add(oldOffset.toFloat()).sub(this.offset.toFloat());
-//            entity.moveAbsolute(newPosition, entity.getYaw(), entity.getPitch(), entity.isOnGround(), true);
-//        }
-//
-//        for (PlayerEntity entity : cache.getAllPlayerEntities()) {
-//            if (entity.getGeyserId() == runtimeId) {
-//                continue;
-//            }
-//
-//            Vector3f newPosition = entity.position().add(oldOffset.toFloat()).sub(this.offset.toFloat());
-//            entity.moveAbsolute(newPosition, entity.getYaw(), entity.getPitch(), entity.isOnGround(), true);
-//        }
     }
 
     public void reOffsetPlayer(double x, double z, Vector3i newOffset) {
@@ -81,12 +62,11 @@ public class CachedSession {
 
         // Let geyser know about the new position too.
         this.session.getPlayerEntity().setPositionManual(Vector3f.from(posX, this.getSession().getPlayerEntity().getPosition().getY(), posZ));
-
         Vector3i oldOffset = this.offset.add(0, 0 , 0);
         this.offset = newOffset;
 
         this.chunkCache.sendChunksWithOffset(oldOffset);
-        this.resendEntityPosition(oldOffset);
+        this.entityCache.resendWithOffset();
 
         this.unconfirmedTeleport = packet.getPosition();
     }
