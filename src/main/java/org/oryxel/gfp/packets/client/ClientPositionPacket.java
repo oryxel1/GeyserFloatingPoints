@@ -51,6 +51,14 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
                 return;
             }
 
+            // Since Geyser no longer knows about our real position, we do the border check ourselves instead.
+            if (session.getOffset().lengthSquared() > 0) {
+                if (session.getSession().getWorldBorder().isPassingIntoBorderBoundaries(packet.getPosition().add(session.getOffset().toFloat()), true)) {
+                    event.setCancelled(true);
+                    return;
+                }
+            }
+
             if (Vector3f.from(packet.getPosition().getX(), 0, packet.getPosition().getZ()).length() < 2000) {
                 return;
             }
