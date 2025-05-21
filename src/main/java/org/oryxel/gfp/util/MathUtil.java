@@ -16,7 +16,7 @@ public class MathUtil {
     public static double findNewPosition(double position) {
         double sign = Math.signum(position);
 
-        while (Math.abs(position) > 2000) {
+        while (Math.abs(position) > 200) {
             position = Math.sqrt(Math.abs(position));
         }
 
