@@ -114,6 +114,15 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
 
             final Vector3i oldOffset = cached.getOffset();
             cached.setOffset(MathUtil.makeOffsetChunkSafe(Vector3d.from(realX - newX, 0, realZ - newZ)));
+            if (cached.getOffset().lengthSquared() > 0) { // Always priority 0 0 0 offset.
+                double oldOffsetX = realX - oldOffset.getX();
+                double oldOffsetZ = realZ - oldOffset.getZ();
+
+                // Old offset is still within range so there is no need to update it.
+                if (Math.abs(oldOffsetX) <= 2000 && Math.abs(oldOffsetZ) <= 2000) {
+                    cached.setOffset(oldOffset);
+                }
+            }
 
             newX = realX - cached.getOffset().getX();
             newZ = realZ - cached.getOffset().getZ();
