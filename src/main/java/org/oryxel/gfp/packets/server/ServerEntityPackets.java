@@ -1,4 +1,4 @@
-package org.oryxel.gfp.packets;
+package org.oryxel.gfp.packets.server;
 
 import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundAddEntityPacket;

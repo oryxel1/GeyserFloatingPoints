@@ -1,9 +1,10 @@
 package org.oryxel.gfp;
 
 import lombok.Getter;
-import org.oryxel.gfp.packets.ClientPositionPacket;
-import org.oryxel.gfp.packets.ServerChunkPackets;
-import org.oryxel.gfp.packets.ServerEntityPackets;
+import org.oryxel.gfp.packets.client.ClientPlayerAction;
+import org.oryxel.gfp.packets.client.ClientPositionPacket;
+import org.oryxel.gfp.packets.server.ServerChunkPackets;
+import org.oryxel.gfp.packets.server.ServerEntityPackets;
 import org.oryxel.gfp.protocol.PacketEvents;
 
 @Getter
@@ -15,6 +16,9 @@ public class GeyserFloatingPoints {
     public void init() {
         PacketEvents.getApi().registerBedrock(new ClientPositionPacket());
         PacketEvents.getApi().registerJava(new ClientPositionPacket());
+
+        PacketEvents.getApi().registerJava(new ClientPlayerAction());
+        PacketEvents.getApi().registerBedrock(new ClientPlayerAction());
 
         PacketEvents.getApi().registerJava(new ServerChunkPackets());
         PacketEvents.getApi().registerJava(new ServerEntityPackets());

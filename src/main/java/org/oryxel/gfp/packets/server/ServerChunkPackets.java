@@ -1,4 +1,4 @@
-package org.oryxel.gfp.packets;
+package org.oryxel.gfp.packets.server;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;

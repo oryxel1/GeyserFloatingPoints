@@ -1,4 +1,4 @@
-package org.oryxel.gfp.packets;
+package org.oryxel.gfp.packets.client;
 
 import org.cloudburstmc.math.vector.Vector3d;
 import org.cloudburstmc.math.vector.Vector3f;
