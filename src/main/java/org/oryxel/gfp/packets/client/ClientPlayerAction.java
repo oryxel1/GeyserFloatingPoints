@@ -3,8 +3,10 @@ package org.oryxel.gfp.packets.client;
 import org.cloudburstmc.protocol.bedrock.data.*;
 import org.cloudburstmc.protocol.bedrock.packet.LevelEventPacket;
 import org.cloudburstmc.protocol.bedrock.packet.PlayerAuthInputPacket;
+import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.PlayerAction;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundBlockDestructionPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundPlayerActionPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundUseItemOnPacket;
 import org.oryxel.gfp.protocol.event.CloudburstPacketEvent;
@@ -38,6 +40,14 @@ public class ClientPlayerAction implements JavaPacketListener, BedrockPacketList
                     packet.getPosition().add(session.getOffset()), packet.getFace(), packet.getHand(), packet.getCursorX(),
                     packet.getCursorY(), packet.getCursorZ(), packet.isInsideBlock(), packet.isHitWorldBorder(), packet.getSequence()
             ));
+        }
+    }
+
+    @Override
+    public void packetReceived(Session session, MCPLPacketEvent event) {
+        if (event.getPacket() instanceof ClientboundBlockDestructionPacket packet) {
+            event.setPacket(new ClientboundBlockDestructionPacket(packet.getBreakerEntityId(),
+                    packet.getPosition().sub(event.getPlayer().getOffset()), packet.getStage()));
         }
     }
 
