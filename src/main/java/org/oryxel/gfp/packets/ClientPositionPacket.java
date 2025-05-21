@@ -8,6 +8,7 @@ import org.geysermc.geyser.entity.type.player.SessionPlayerEntity;
 import org.geysermc.mcprotocollib.network.Session;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.PositionElement;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerPositionPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.ServerboundMoveVehiclePacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundMovePlayerPosPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundMovePlayerPosRotPacket;
 import org.oryxel.gfp.protocol.event.CloudburstPacketEvent;
@@ -86,6 +87,10 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
                     packet.getZ() + cached.getOffset().getZ(), packet.getYaw(), packet.getPitch()
             ));
         }
+
+        if (event.getPacket() instanceof ServerboundMoveVehiclePacket packet) {
+            event.setPacket(new ServerboundMoveVehiclePacket(packet.getPosition().add(cached.getOffset().toDouble()), packet.getYRot(), packet.getXRot(), packet.isOnGround()));
+        }
     }
 
     @Override
@@ -154,6 +159,7 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
             event.getPostTasks().add(() -> {
                 // Offset changed and the server won't do it for us... Manually update chunk.
                 cached.getChunkCache().sendChunksWithOffset(oldOffset);
+                cached.resendEntityPosition(oldOffset);
             });
         }
     }
