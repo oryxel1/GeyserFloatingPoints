@@ -5,7 +5,6 @@ import lombok.Setter;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.BedrockServerSession;
-import org.cloudburstmc.protocol.bedrock.packet.MoveEntityAbsolutePacket;
 import org.cloudburstmc.protocol.bedrock.packet.SetSpawnPositionPacket;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.DimensionUtils;
@@ -55,15 +54,6 @@ public class CachedSession {
     public void reOffsetPlayer(double x, double z, Vector3i newOffset) {
         float posX = Float.parseFloat(Double.toString(x)), posZ = Float.parseFloat(Double.toString(z));
 
-        // Silent teleport.
-        final MoveEntityAbsolutePacket packet = new MoveEntityAbsolutePacket();
-        packet.setRuntimeEntityId(this.runtimeId);
-        packet.setForceMove(true);
-        packet.setTeleported(true);
-        packet.setPosition(Vector3f.from(posX, this.session.getPlayerEntity().getPosition().getY(), posZ));
-        packet.setRotation(this.rotation);
-        this.cloudburstDownstream.sendPacket(packet);
-
         // Let geyser know about the new position too.
         this.session.getPlayerEntity().setPositionManual(Vector3f.from(posX, this.getSession().getPlayerEntity().getPosition().getY(), posZ));
         Vector3i oldOffset = this.offset.add(0, 0 , 0);
@@ -73,7 +63,7 @@ public class CachedSession {
         this.entityCache.resendWithOffset();
         this.sendWorldSpawn();
 
-        this.unconfirmedTeleport = packet.getPosition();
+        this.unconfirmedTeleport = this.session.getPlayerEntity().getPosition();
     }
 
     public void sendWorldSpawn() {

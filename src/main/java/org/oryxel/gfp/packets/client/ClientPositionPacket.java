@@ -3,7 +3,9 @@ package org.oryxel.gfp.packets.client;
 import org.cloudburstmc.math.vector.Vector3d;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
+import org.cloudburstmc.protocol.bedrock.data.ServerboundLoadingScreenPacketType;
 import org.cloudburstmc.protocol.bedrock.packet.PlayerAuthInputPacket;
+import org.cloudburstmc.protocol.bedrock.packet.ServerboundLoadingScreenPacket;
 import org.geysermc.geyser.entity.type.player.SessionPlayerEntity;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.PositionElement;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerPositionPacket;
@@ -21,15 +23,24 @@ import org.oryxel.gfp.protocol.event.MCPLPacketEvent;
 import org.oryxel.gfp.protocol.listener.BedrockPacketListener;
 import org.oryxel.gfp.protocol.listener.JavaPacketListener;
 import org.oryxel.gfp.session.CachedSession;
+import org.oryxel.gfp.util.DimensionUtil;
 import org.oryxel.gfp.util.MathUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class ClientPositionPacket implements BedrockPacketListener, JavaPacketListener {
     @Override
     public void onPacketReceived(CloudburstPacketEvent event) {
         final CachedSession session = event.getPlayer();
+
+        if (event.getPacket() instanceof ServerboundLoadingScreenPacket packet && packet.getType() == ServerboundLoadingScreenPacketType.END_LOADING_SCREEN) {
+            if (Objects.equals(DimensionUtil.LOADING_SCREEN_ID, packet.getLoadingScreenId())) {
+                session.getSession().setSpawned(true);
+                System.out.println("Spawned!");
+            }
+        }
 
         // We need to handle this before Geyser handle it.
         if (event.getPacket() instanceof PlayerAuthInputPacket packet) {
@@ -65,8 +76,8 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
 
             double oldPosX = Double.parseDouble(Float.toString(packet.getPosition().getX()));
             double oldPosZ = Double.parseDouble(Float.toString(packet.getPosition().getZ()));
-            double newPosX = Math.sqrt(Math.abs(oldPosX)) * Math.signum(oldPosX);
-            double newPosZ = Math.sqrt(Math.abs(oldPosZ)) * Math.signum(oldPosZ);
+            double newPosX = MathUtil.findNewPosition(oldPosX);
+            double newPosZ = MathUtil.findNewPosition(oldPosZ);
 
             event.setCancelled(true);
 
@@ -162,11 +173,11 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
             }
 
             if (Math.abs(newX) > 2000) {
-                newX = Math.sqrt(Math.abs(newX)) * Math.signum(realX);
+                newX = MathUtil.findNewPosition(newX);
             }
 
             if (Math.abs(newZ) > 2000) {
-                newZ = Math.sqrt(Math.abs(newZ)) * Math.signum(realZ);
+                newZ = MathUtil.findNewPosition(newZ);
             }
 
             final Vector3i oldOffset = session.getOffset();
@@ -202,6 +213,11 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
             // Match 1 : 1, no need to update chunks.
             if (oldOffset.getX() == session.getOffset().getX() && oldOffset.getY() == session.getOffset().getY() &&
                     oldOffset.getZ() == session.getOffset().getZ()) {
+                return;
+            }
+
+            // Player haven't spawned yet, no need for manual update.
+            if (!session.getSession().isSpawned()) {
                 return;
             }
 

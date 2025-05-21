@@ -46,17 +46,10 @@ public class ChunkCache {
 
         // Use dimension switch to quickly reset all previous chunks.
         // Also since we can't switch to same dimension, we send a fake one THEN the real one.
-        DimensionUtil.switchDimension(session, DimensionUtils.getTemporaryDimension(oldDimension, oldDimension));
-        DimensionUtil.switchDimension(session, oldDimension);
+        DimensionUtil.switchDimension(session, DimensionUtils.getTemporaryDimension(oldDimension, oldDimension), false);
+        DimensionUtil.switchDimension(session, oldDimension, true);
 
-        session.getSession().setSpawned(true); // Manually set this again.
-
-//        MovePlayerPacket respawn = new MovePlayerPacket();
-//        respawn.setRuntimeEntityId(session.runtimeId);
-//        respawn.setMode(MovePlayerPacket.Mode.RESPAWN);
-//        respawn.setPosition(floatingPointPosition.up(EntityDefinitions.PLAYER.offset()));
-//        respawn.setRotation(session.rotation);
-//        session.cloudburstDownstream.sendPacket(respawn);
+        session.getSession().setSpawned(false);
 
         // This is a bad idea...
         for (Map.Entry<Long, ChunkSection[]> entry : this.chunks.entrySet()) {

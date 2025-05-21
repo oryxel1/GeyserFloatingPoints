@@ -13,10 +13,14 @@ public class MathUtil {
     }
 
     // Same as makeOffsetChunkSafe
-    public static Vector3i makePositionChunkSafe(Vector3i position) {
-        long l = MathUtils.chunkPositionToLong(position.getX() >> 4, position.getZ() >> 4);
-        int reversedX = getX(l) << 4, reversedZ = getZ(l) << 4;
-        return Vector3i.from(reversedX, 0, reversedZ);
+    public static double findNewPosition(double position) {
+        double sign = Math.signum(position);
+
+        while (Math.abs(position) > 2000) {
+            position = Math.sqrt(Math.abs(position));
+        }
+
+        return position * sign;
     }
 
     public static int getX(long l) {
