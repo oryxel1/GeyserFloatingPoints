@@ -6,7 +6,9 @@ import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.BedrockServerSession;
 import org.cloudburstmc.protocol.bedrock.packet.MoveEntityAbsolutePacket;
+import org.cloudburstmc.protocol.bedrock.packet.SetSpawnPositionPacket;
 import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.util.DimensionUtils;
 import org.geysermc.mcprotocollib.network.ClientSession;
 import org.oryxel.gfp.cache.ChunkCache;
 import org.oryxel.gfp.cache.EntityCache;
@@ -38,6 +40,8 @@ public class CachedSession {
     @Getter
     private final EntityCache entityCache = new EntityCache(this);
 
+    public Vector3i worldSpawn = null;
+
     public CachedSession(GeyserSession session) {
         this.session = session;
 
@@ -67,7 +71,20 @@ public class CachedSession {
 
         this.chunkCache.sendChunksWithOffset(oldOffset);
         this.entityCache.resendWithOffset();
+        this.sendWorldSpawn();
 
         this.unconfirmedTeleport = packet.getPosition();
+    }
+
+    public void sendWorldSpawn() {
+        if (this.worldSpawn == null) {
+            return;
+        }
+
+        SetSpawnPositionPacket spawnPositionPacket = new SetSpawnPositionPacket();
+        spawnPositionPacket.setBlockPosition(worldSpawn.sub(this.offset));
+        spawnPositionPacket.setDimensionId(DimensionUtils.javaToBedrock(this.session));
+        spawnPositionPacket.setSpawnType(SetSpawnPositionPacket.Type.WORLD_SPAWN);
+        this.session.sendUpstreamPacket(spawnPositionPacket);
     }
 }

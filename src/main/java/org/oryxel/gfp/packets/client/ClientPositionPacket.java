@@ -7,7 +7,13 @@ import org.cloudburstmc.protocol.bedrock.packet.PlayerAuthInputPacket;
 import org.geysermc.geyser.entity.type.player.SessionPlayerEntity;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.PositionElement;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerPositionPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundPickItemFromBlockPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundSetCommandBlockPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundSetStructureBlockPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.ServerboundBlockEntityTagQueryPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.ServerboundJigsawGeneratePacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.ServerboundMoveVehiclePacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.ServerboundSignUpdatePacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundMovePlayerPosPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundMovePlayerPosRotPacket;
 import org.oryxel.gfp.protocol.event.CloudburstPacketEvent;
@@ -67,28 +73,64 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
 
     @Override
     public void packetSending(MCPLPacketEvent event) {
-        final CachedSession cached = event.getSession();
+        final CachedSession session = event.getSession();
 
         if (event.getPacket() instanceof ServerboundMovePlayerPosPacket packet) {
             event.setPacket(new ServerboundMovePlayerPosPacket(
                     packet.isOnGround(), packet.isHorizontalCollision(),
-                    packet.getX() + cached.getOffset().getX(),
-                    packet.getY() + cached.getOffset().getY(),
-                    packet.getZ() + cached.getOffset().getZ()
+                    packet.getX() + session.getOffset().getX(),
+                    packet.getY() + session.getOffset().getY(),
+                    packet.getZ() + session.getOffset().getZ()
             ));
         }
 
         if (event.getPacket() instanceof ServerboundMovePlayerPosRotPacket packet) {
             event.setPacket(new ServerboundMovePlayerPosRotPacket(
                     packet.isOnGround(), packet.isHorizontalCollision(),
-                    packet.getX() + cached.getOffset().getX(),
-                    packet.getY() + cached.getOffset().getY(),
-                    packet.getZ() + cached.getOffset().getZ(), packet.getYaw(), packet.getPitch()
+                    packet.getX() + session.getOffset().getX(),
+                    packet.getY() + session.getOffset().getY(),
+                    packet.getZ() + session.getOffset().getZ(), packet.getYaw(), packet.getPitch()
             ));
         }
 
         if (event.getPacket() instanceof ServerboundMoveVehiclePacket packet) {
-            event.setPacket(new ServerboundMoveVehiclePacket(packet.getPosition().add(cached.getOffset().toDouble()), packet.getYRot(), packet.getXRot(), packet.isOnGround()));
+            event.setPacket(new ServerboundMoveVehiclePacket(packet.getPosition().add(session.getOffset().toDouble()), packet.getYRot(), packet.getXRot(), packet.isOnGround()));
+        }
+
+        if (event.getPacket() instanceof ServerboundBlockEntityTagQueryPacket packet) {
+            event.setPacket(new ServerboundBlockEntityTagQueryPacket(packet.getTransactionId(), packet.getPosition().sub(session.getOffset())));
+        }
+
+        if (event.getPacket() instanceof ServerboundJigsawGeneratePacket packet) {
+            event.setPacket(new ServerboundJigsawGeneratePacket(packet.getPosition().sub(session.getOffset()), packet.getLevels(), packet.isKeepJigsaws()));
+        }
+
+        if (event.getPacket() instanceof ServerboundPickItemFromBlockPacket packet) {
+            event.setPacket(new ServerboundPickItemFromBlockPacket(packet.getPos().sub(session.getOffset()), packet.isIncludeData()));
+        }
+
+        if (event.getPacket() instanceof ServerboundSetCommandBlockPacket packet) {
+            event.setPacket(new ServerboundSetCommandBlockPacket(packet.getPosition().sub(session.getOffset()), packet.getCommand(),
+                    packet.getMode(), packet.isDoesTrackOutput(), packet.isConditional(), packet.isAutomatic()));
+        }
+
+        // A bit tricky so this is a TODO for now since net.kyori.adventure.key.Key is relocated.
+//        if (event.getPacket() instanceof ServerboundSetJigsawBlockPacket packet) {
+//            event.setPacket(new ServerboundSetJigsawBlockPacket(packet.getPosition().sub(session.getOffset()),
+//                    packet.getName(), ));
+//        }
+
+        if (event.getPacket() instanceof ServerboundSetStructureBlockPacket packet) {
+            event.setPacket(new ServerboundSetStructureBlockPacket(
+                    packet.getPosition().sub(session.getOffset()), packet.getAction(), packet.getMode(),
+                    packet.getName(), packet.getOffset(), packet.getSize(),  packet.getMirror(),
+                    packet.getRotation(), packet.getMetadata(), packet.getIntegrity(), packet.getSeed(),
+                    packet.isIgnoreEntities(), packet.isShowAir(), packet.isShowBoundingBox(), packet.isStrict()
+            ));
+        }
+
+        if (event.getPacket() instanceof ServerboundSignUpdatePacket packet) {
+            event.setPacket(new ServerboundSignUpdatePacket(packet.getPosition().sub(session.getOffset()), packet.getLines(), packet.isFrontText()));
         }
     }
 
@@ -159,6 +201,7 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
                 // Offset changed and the server won't do it for us... Manually update chunk, and entity position.
                 session.getChunkCache().sendChunksWithOffset(oldOffset);
                 session.getEntityCache().resendWithOffset();
+                session.sendWorldSpawn();
             });
         }
     }
