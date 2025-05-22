@@ -6,6 +6,7 @@ import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.BedrockServerSession;
 import org.cloudburstmc.protocol.bedrock.packet.SetSpawnPositionPacket;
+import org.geysermc.geyser.entity.type.player.SessionPlayerEntity;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.DimensionUtils;
 import org.geysermc.mcprotocollib.network.ClientSession;
@@ -31,8 +32,9 @@ public class CachedSession {
     private Vector3i offset = Vector3i.from(0, 0 ,0);
 
     public Vector3f rotation = Vector3f.ZERO;
+    public Vector3f cachedVelocity = Vector3f.ZERO;
 
-    public Vector3f unconfirmedTeleport;
+    public boolean silentDimensionSwitch = false;
 
     @Getter
     private final ChunkCache chunkCache = new ChunkCache(this);
@@ -54,16 +56,16 @@ public class CachedSession {
     public void reOffsetPlayer(double x, double z, Vector3i newOffset) {
         float posX = Float.parseFloat(Double.toString(x)), posZ = Float.parseFloat(Double.toString(z));
 
+        final SessionPlayerEntity entity = this.session.getPlayerEntity();
         // Let geyser know about the new position too.
-        this.session.getPlayerEntity().setPositionManual(Vector3f.from(posX, this.getSession().getPlayerEntity().getPosition().getY(), posZ));
+        entity.moveAbsolute(Vector3f.from(posX, this.getSession().getPlayerEntity().position().getY(), posZ), entity.getYaw(), entity.getPitch(), entity.getHeadYaw(), entity.isOnGround(), false);
+
         Vector3i oldOffset = this.offset.add(0, 0 , 0);
         this.offset = newOffset;
 
         this.chunkCache.sendChunksWithOffset(oldOffset);
         this.entityCache.resendWithOffset();
         this.sendWorldSpawn();
-
-        this.unconfirmedTeleport = this.session.getPlayerEntity().getPosition();
     }
 
     public void sendWorldSpawn() {

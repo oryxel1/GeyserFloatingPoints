@@ -6,16 +6,13 @@ import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.ServerboundLoadingScreenPacketType;
 import org.cloudburstmc.protocol.bedrock.packet.PlayerAuthInputPacket;
 import org.cloudburstmc.protocol.bedrock.packet.ServerboundLoadingScreenPacket;
+import org.cloudburstmc.protocol.bedrock.packet.SetEntityMotionPacket;
 import org.geysermc.geyser.entity.type.player.SessionPlayerEntity;
+import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.text.ChatColor;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.PositionElement;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerPositionPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundPickItemFromBlockPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundSetCommandBlockPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundSetStructureBlockPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.ServerboundBlockEntityTagQueryPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.ServerboundJigsawGeneratePacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.ServerboundMoveVehiclePacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.ServerboundSignUpdatePacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundMovePlayerPosPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundMovePlayerPosRotPacket;
 import org.oryxel.gfp.protocol.event.CloudburstPacketEvent;
@@ -33,12 +30,19 @@ import java.util.Objects;
 public class ClientPositionPacket implements BedrockPacketListener, JavaPacketListener {
     @Override
     public void onPacketReceived(CloudburstPacketEvent event) {
-        final CachedSession session = event.getPlayer();
+        final CachedSession session = event.getSession();
 
         if (event.getPacket() instanceof ServerboundLoadingScreenPacket packet && packet.getType() == ServerboundLoadingScreenPacketType.END_LOADING_SCREEN) {
-            if (Objects.equals(DimensionUtil.LOADING_SCREEN_ID, packet.getLoadingScreenId())) {
+            if (Objects.equals(DimensionUtil.LOADING_SCREEN_ID, packet.getLoadingScreenId()) && session.silentDimensionSwitch) {
                 session.getSession().setSpawned(true);
-                System.out.println("Spawned!");
+                session.silentDimensionSwitch = false;
+
+                // Hacky fix so that player keep the old motion, would be better if you use rewind correction but too lazy to implement that
+                SetEntityMotionPacket motion = new SetEntityMotionPacket();
+                motion.setMotion(session.cachedVelocity);
+                motion.setRuntimeEntityId(session.runtimeId);
+
+                session.cloudburstDownstream.sendPacketImmediately(motion);
             }
         }
 
@@ -51,17 +55,17 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
                 return;
             }
 
-            if (session.unconfirmedTeleport != null) {
-                // Cough cough, well 10 blocks since unconfirmedTeleport will only be non-null if the teleport distance > 2000
-                // so idc, also we check for this since the packet we send won't affect velocity lol.
-                if (session.unconfirmedTeleport.distance(packet.getPosition()) <= 10) {
-                    session.unconfirmedTeleport = null;
-                }
-
+            if (session.silentDimensionSwitch) {
                 event.setCancelled(true);
                 return;
             }
 
+            // This move ain't valid for re offset!
+            if (!isValidMove(session.getSession(), session.getSession().getPlayerEntity().getPosition(), packet.getPosition())) {
+                return;
+            }
+
+            session.cachedVelocity = packet.getDelta();
             // Since Geyser no longer knows about our real position, we do the border check ourselves instead.
             if (session.getOffset().lengthSquared() > 0) {
                 if (session.getSession().getWorldBorder().isPassingIntoBorderBoundaries(packet.getPosition().add(session.getOffset().toFloat()), true)) {
@@ -74,8 +78,8 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
                 return;
             }
 
-            double oldPosX = Double.parseDouble(Float.toString(packet.getPosition().getX()));
-            double oldPosZ = Double.parseDouble(Float.toString(packet.getPosition().getZ()));
+            double oldPosX = Double.parseDouble(Float.toString(packet.getPosition().getX())) + session.getOffset().getX();
+            double oldPosZ = Double.parseDouble(Float.toString(packet.getPosition().getZ())) + session.getOffset().getZ();
             double newPosX = MathUtil.findNewPosition(oldPosX);
             double newPosZ = MathUtil.findNewPosition(oldPosZ);
 
@@ -115,42 +119,6 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
         if (event.getPacket() instanceof ServerboundMoveVehiclePacket packet) {
             event.setPacket(new ServerboundMoveVehiclePacket(packet.getPosition().add(session.getOffset().toDouble()), packet.getYRot(), packet.getXRot(), packet.isOnGround()));
         }
-
-        if (event.getPacket() instanceof ServerboundBlockEntityTagQueryPacket packet) {
-            event.setPacket(new ServerboundBlockEntityTagQueryPacket(packet.getTransactionId(), packet.getPosition().sub(session.getOffset())));
-        }
-
-        if (event.getPacket() instanceof ServerboundJigsawGeneratePacket packet) {
-            event.setPacket(new ServerboundJigsawGeneratePacket(packet.getPosition().sub(session.getOffset()), packet.getLevels(), packet.isKeepJigsaws()));
-        }
-
-        if (event.getPacket() instanceof ServerboundPickItemFromBlockPacket packet) {
-            event.setPacket(new ServerboundPickItemFromBlockPacket(packet.getPos().sub(session.getOffset()), packet.isIncludeData()));
-        }
-
-        if (event.getPacket() instanceof ServerboundSetCommandBlockPacket packet) {
-            event.setPacket(new ServerboundSetCommandBlockPacket(packet.getPosition().sub(session.getOffset()), packet.getCommand(),
-                    packet.getMode(), packet.isDoesTrackOutput(), packet.isConditional(), packet.isAutomatic()));
-        }
-
-        // A bit tricky so this is a TODO for now since net.kyori.adventure.key.Key is relocated.
-//        if (event.getPacket() instanceof ServerboundSetJigsawBlockPacket packet) {
-//            event.setPacket(new ServerboundSetJigsawBlockPacket(packet.getPosition().sub(session.getOffset()),
-//                    packet.getName(), ));
-//        }
-
-        if (event.getPacket() instanceof ServerboundSetStructureBlockPacket packet) {
-            event.setPacket(new ServerboundSetStructureBlockPacket(
-                    packet.getPosition().sub(session.getOffset()), packet.getAction(), packet.getMode(),
-                    packet.getName(), packet.getOffset(), packet.getSize(),  packet.getMirror(),
-                    packet.getRotation(), packet.getMetadata(), packet.getIntegrity(), packet.getSeed(),
-                    packet.isIgnoreEntities(), packet.isShowAir(), packet.isShowBoundingBox(), packet.isStrict()
-            ));
-        }
-
-        if (event.getPacket() instanceof ServerboundSignUpdatePacket packet) {
-            event.setPacket(new ServerboundSignUpdatePacket(packet.getPosition().sub(session.getOffset()), packet.getLines(), packet.isFrontText()));
-        }
     }
 
     @Override
@@ -160,8 +128,6 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
 
         if (event.getPacket() instanceof ClientboundPlayerPositionPacket packet) {
             Vector3d pos = packet.getPosition();
-
-            session.unconfirmedTeleport = null; // No need for this anymore.
 
             double realX = pos.getX() + (packet.getRelatives().contains(PositionElement.X) ? entity.getPosition().getX() : 0),
                     realZ = pos.getZ() + (packet.getRelatives().contains(PositionElement.Z) ? entity.getPosition().getZ() : 0);
@@ -228,5 +194,31 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
                 session.sendWorldSpawn();
             });
         }
+    }
+
+    @Override
+    public void onPacketSend(CloudburstPacketEvent event, boolean immediate) {
+        final CachedSession session = event.getSession();
+        if (event.getPacket() instanceof SetEntityMotionPacket packet && packet.getRuntimeEntityId() == session.runtimeId) {
+            session.cachedVelocity = packet.getMotion();
+        }
+    }
+
+    private static boolean isValidMove(GeyserSession session, Vector3f currentPosition, Vector3f newPosition) {
+        if (isInvalidNumber(newPosition.getX()) || isInvalidNumber(newPosition.getY()) || isInvalidNumber(newPosition.getZ())) {
+            return false;
+        }
+        if (currentPosition.distanceSquared(newPosition) > 15) {
+            session.getGeyser().getLogger().debug(ChatColor.RED + session.bedrockUsername() + " moved too quickly." +
+                    " current position: " + currentPosition + ", new position: " + newPosition);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private static boolean isInvalidNumber(float val) {
+        return Float.isNaN(val) || Float.isInfinite(val);
     }
 }

@@ -10,7 +10,7 @@ import java.util.List;
 
 @Data
 public class CloudburstPacketEvent {
-    private final CachedSession player;
+    private final CachedSession session;
     private final BedrockPacket packet;
     private boolean cancelled;
 

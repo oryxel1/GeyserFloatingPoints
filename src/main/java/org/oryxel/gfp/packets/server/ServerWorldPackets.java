@@ -1,12 +1,15 @@
 package org.oryxel.gfp.packets.server;
 
+import org.cloudburstmc.protocol.bedrock.packet.ChangeDimensionPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerLookAtPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.*;
+import org.oryxel.gfp.protocol.event.CloudburstPacketEvent;
 import org.oryxel.gfp.protocol.event.MCPLPacketEvent;
+import org.oryxel.gfp.protocol.listener.BedrockPacketListener;
 import org.oryxel.gfp.protocol.listener.JavaPacketListener;
 import org.oryxel.gfp.session.CachedSession;
 
-public class ServerWorldPackets implements JavaPacketListener {
+public class ServerWorldPackets implements JavaPacketListener, BedrockPacketListener {
     @Override
     public void packetReceived(MCPLPacketEvent event) {
         final CachedSession session = event.getSession();
@@ -46,6 +49,13 @@ public class ServerWorldPackets implements JavaPacketListener {
         if (event.getPacket() instanceof ClientboundSetDefaultSpawnPositionPacket packet) {
             session.worldSpawn = packet.getPosition();
             event.setPacket(new ClientboundSetDefaultSpawnPositionPacket(packet.getPosition().sub(session.getOffset()), packet.getAngle()));
+        }
+    }
+
+    @Override
+    public void onPacketSend(CloudburstPacketEvent event, boolean immediate) {
+        if (event.getPacket() instanceof ChangeDimensionPacket) {
+            event.getSession().silentDimensionSwitch = false;
         }
     }
 }

@@ -6,6 +6,12 @@ import org.cloudburstmc.protocol.bedrock.packet.PlayerAuthInputPacket;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.PlayerAction;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundBlockDestructionPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundPickItemFromBlockPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundSetCommandBlockPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundSetStructureBlockPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.ServerboundBlockEntityTagQueryPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.ServerboundJigsawGeneratePacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.ServerboundSignUpdatePacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundPlayerActionPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundUseItemOnPacket;
 import org.oryxel.gfp.protocol.event.CloudburstPacketEvent;
@@ -40,6 +46,42 @@ public class ClientPlayerAction implements JavaPacketListener, BedrockPacketList
                     packet.getCursorY(), packet.getCursorZ(), packet.isInsideBlock(), packet.isHitWorldBorder(), packet.getSequence()
             ));
         }
+
+        if (event.getPacket() instanceof ServerboundBlockEntityTagQueryPacket packet) {
+            event.setPacket(new ServerboundBlockEntityTagQueryPacket(packet.getTransactionId(), packet.getPosition().sub(session.getOffset())));
+        }
+
+        if (event.getPacket() instanceof ServerboundJigsawGeneratePacket packet) {
+            event.setPacket(new ServerboundJigsawGeneratePacket(packet.getPosition().sub(session.getOffset()), packet.getLevels(), packet.isKeepJigsaws()));
+        }
+
+        if (event.getPacket() instanceof ServerboundPickItemFromBlockPacket packet) {
+            event.setPacket(new ServerboundPickItemFromBlockPacket(packet.getPos().sub(session.getOffset()), packet.isIncludeData()));
+        }
+
+        if (event.getPacket() instanceof ServerboundSetCommandBlockPacket packet) {
+            event.setPacket(new ServerboundSetCommandBlockPacket(packet.getPosition().sub(session.getOffset()), packet.getCommand(),
+                    packet.getMode(), packet.isDoesTrackOutput(), packet.isConditional(), packet.isAutomatic()));
+        }
+
+        // A bit tricky so this is a TODO for now since net.kyori.adventure.key.Key is relocated.
+//        if (event.getPacket() instanceof ServerboundSetJigsawBlockPacket packet) {
+//            event.setPacket(new ServerboundSetJigsawBlockPacket(packet.getPosition().sub(session.getOffset()),
+//                    packet.getName(), ));
+//        }
+
+        if (event.getPacket() instanceof ServerboundSetStructureBlockPacket packet) {
+            event.setPacket(new ServerboundSetStructureBlockPacket(
+                    packet.getPosition().sub(session.getOffset()), packet.getAction(), packet.getMode(),
+                    packet.getName(), packet.getOffset(), packet.getSize(),  packet.getMirror(),
+                    packet.getRotation(), packet.getMetadata(), packet.getIntegrity(), packet.getSeed(),
+                    packet.isIgnoreEntities(), packet.isShowAir(), packet.isShowBoundingBox(), packet.isStrict()
+            ));
+        }
+
+        if (event.getPacket() instanceof ServerboundSignUpdatePacket packet) {
+            event.setPacket(new ServerboundSignUpdatePacket(packet.getPosition().sub(session.getOffset()), packet.getLines(), packet.isFrontText()));
+        }
     }
 
     @Override
@@ -53,7 +95,7 @@ public class ClientPlayerAction implements JavaPacketListener, BedrockPacketList
     @Override
     public void onPacketReceived(CloudburstPacketEvent event) {
         if (event.getPacket() instanceof PlayerAuthInputPacket packet) {
-            final CachedSession session = event.getPlayer();
+            final CachedSession session = event.getSession();
 
             if (!session.getSession().getGeyser().getWorldManager().hasOwnChunkCache()) {
                 // Handled in packetSending.
@@ -80,7 +122,7 @@ public class ClientPlayerAction implements JavaPacketListener, BedrockPacketList
 
     @Override
     public void onPacketSend(CloudburstPacketEvent event, boolean immediate) {
-        final CachedSession session = event.getPlayer();
+        final CachedSession session = event.getSession();
 
         if (event.getPacket() instanceof LevelEventPacket packet) {
             if (!session.getSession().getGeyser().getWorldManager().hasOwnChunkCache()) {
@@ -88,7 +130,7 @@ public class ClientPlayerAction implements JavaPacketListener, BedrockPacketList
                 return;
             }
 
-            // Since we un-offset the START_BREAK (look at this class line 66) we need to "re-offset" it.
+            // Since we un-offset the START_BREAK (look at this class line 117) we need to "re-offset" it.
             if (packet.getType() == LevelEvent.BLOCK_START_BREAK) {
                 packet.setPosition(packet.getPosition().sub(session.getOffset().toFloat()));
             }

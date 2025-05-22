@@ -34,7 +34,7 @@ public class DimensionUtil {
         changeDimensionPacket.setDimension(bedrockDimension);
         changeDimensionPacket.setRespawn(true);
         changeDimensionPacket.setPosition(session.getSession().getPlayerEntity().position());
-        session.getSession().sendUpstreamPacket(changeDimensionPacket);
+        session.cloudburstDownstream.sendPacketImmediately(changeDimensionPacket);
 
         DimensionUtils.setBedrockDimension(session.getSession(), bedrockDimension);
 

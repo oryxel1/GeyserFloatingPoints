@@ -50,6 +50,7 @@ public class ChunkCache {
         DimensionUtil.switchDimension(session, oldDimension, true);
 
         session.getSession().setSpawned(false);
+        session.silentDimensionSwitch = true;
 
         // This is a bad idea...
         for (Map.Entry<Long, ChunkSection[]> entry : this.chunks.entrySet()) {
