@@ -56,9 +56,7 @@ public class CachedSession {
     public void reOffsetPlayer(double x, double z, Vector3i newOffset) {
         float posX = Float.parseFloat(Double.toString(x)), posZ = Float.parseFloat(Double.toString(z));
 
-        final SessionPlayerEntity entity = this.session.getPlayerEntity();
-        // Let geyser know about the new position too.
-        entity.moveAbsolute(Vector3f.from(posX, this.getSession().getPlayerEntity().position().getY(), posZ), entity.getYaw(), entity.getPitch(), entity.getHeadYaw(), entity.isOnGround(), false);
+        this.session.getPlayerEntity().setPositionManual(Vector3f.from(posX, this.getSession().getPlayerEntity().getPosition().getY(), posZ));
 
         Vector3i oldOffset = this.offset.add(0, 0 , 0);
         this.offset = newOffset;
