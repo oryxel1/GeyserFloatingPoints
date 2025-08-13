@@ -30,4 +30,9 @@ public final class CloudburstReceiveListener implements BedrockPacketHandler {
 
         return this.oldHandler.handlePacket(event.getPacket());
     }
+
+    @Override
+    public void onDisconnect(String reason) {
+        this.oldHandler.onDisconnect(reason);
+    }
 }
