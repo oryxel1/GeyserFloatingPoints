@@ -23,6 +23,10 @@ public class ServerChunkPackets implements JavaPacketListener {
             event.setPacket(new ClientboundBlockEntityDataPacket(packet.getPosition().sub(session.getOffset()), packet.getType(), packet.getNbt()));
         }
 
+        if (event.getPacket() instanceof ClientboundBlockEventPacket packet) {
+            event.setPacket(new ClientboundBlockEventPacket(packet.getPosition().sub(session.getOffset()), packet.getRawType(), packet.getRawValue(), packet.getType(), packet.getValue(), packet.getBlockId()));
+        }
+
         if (event.getPacket() instanceof ClientboundSetChunkCacheCenterPacket packet) {
             int chunkBlockX = packet.getChunkX() << 4;
             int chunkBlockZ = packet.getChunkZ() << 4;
