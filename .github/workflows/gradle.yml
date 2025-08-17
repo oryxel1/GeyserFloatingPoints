@@ -7,8 +7,6 @@ on:
      - '.gitignore'
      - 'LICENSE'
      - 'README.md'
-   tags:
-     - 'v*'
 
 jobs:
   build:
