@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'org.oryxel.gjr'
-version = '1.1'
+version = '1.2'
 
 repositories {
     mavenCentral()
@@ -31,6 +31,7 @@ dependencies {
 
 shadowJar {
     relocate 'org.yaml.snakeyaml', 'org.oryxel.gfp.shaded.snakeyaml'
+    relocate 'com.fasterxml', 'org.oryxel.gfp.shaded.fasterxml'
 }
 
 def targetJavaVersion = 17
