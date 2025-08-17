@@ -11,12 +11,15 @@ import org.geysermc.geyser.api.event.lifecycle.GeyserShutdownEvent;
 import org.geysermc.geyser.api.extension.Extension;
 import org.geysermc.geyser.session.GeyserSession;
 import org.oryxel.gfp.GeyserFloatingPoints;
+import org.oryxel.gfp.config.Config;
+import org.oryxel.gfp.config.ConfigLoader;
 import org.oryxel.gfp.session.CachedSession;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class GFPExtension implements Extension {
+    public static Config config;
     public static final List<GeyserSession> showPositions = new CopyOnWriteArrayList<>();
 
     @Subscribe
@@ -31,6 +34,7 @@ public class GFPExtension implements Extension {
 
     @Subscribe
     public void onGeyserPostInitializeEvent(GeyserPostInitializeEvent event) {
+        config = ConfigLoader.load(this, GFPExtension.class, Config.class);
         GeyserFloatingPoints.getInstance().init();
     }
 

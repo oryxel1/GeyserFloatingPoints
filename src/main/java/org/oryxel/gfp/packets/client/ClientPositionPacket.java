@@ -91,7 +91,7 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
 
             session.lastRealPosInt = realIntPos;
 
-            if (Vector3f.from(packet.getPosition().getX(), 0, packet.getPosition().getZ()).length() < 2000) {
+            if (Vector3f.from(packet.getPosition().getX(), 0, packet.getPosition().getZ()).length() < GFPExtension.config.maxPosition()) {
                 return;
             }
 
@@ -151,11 +151,12 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
                     realZ = pos.getZ() + (packet.getRelatives().contains(PositionElement.Z) ? realPlayerPosition.getZ() : 0);
             double newX = realX, newZ = realZ;
 
-            if (Math.abs(newX) > 2000) {
+            int maxValue = GFPExtension.config.maxPosition();
+            if (Math.abs(newX) > maxValue) {
                 newX = MathUtil.findNewPosition(newX);
             }
 
-            if (Math.abs(newZ) > 2000) {
+            if (Math.abs(newZ) > maxValue) {
                 newZ = MathUtil.findNewPosition(newZ);
             }
 
@@ -168,7 +169,7 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
                 double oldOffsetZ = realZ - oldOffset.getZ();
 
                 // Old offset is still within range so there is no need to update it.
-                if (Math.abs(oldOffsetX) <= 2000 && Math.abs(oldOffsetZ) <= 2000) {
+                if (Math.abs(oldOffsetX) <= maxValue && Math.abs(oldOffsetZ) <= maxValue) {
                     session.setOffset(oldOffset);
                 }
             }
