@@ -7,6 +7,8 @@ import org.cloudburstmc.protocol.bedrock.data.ServerboundLoadingScreenPacketType
 import org.cloudburstmc.protocol.bedrock.packet.PlayerAuthInputPacket;
 import org.cloudburstmc.protocol.bedrock.packet.ServerboundLoadingScreenPacket;
 import org.cloudburstmc.protocol.bedrock.packet.SetEntityMotionPacket;
+import org.cloudburstmc.protocol.bedrock.packet.SetTitlePacket;
+import org.geysermc.geyser.entity.EntityDefinitions;
 import org.geysermc.geyser.entity.type.player.SessionPlayerEntity;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.text.ChatColor;
@@ -15,6 +17,7 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.play
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.ServerboundMoveVehiclePacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundMovePlayerPosPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundMovePlayerPosRotPacket;
+import org.oryxel.gfp.geyser.GFPExtension;
 import org.oryxel.gfp.protocol.event.CloudburstPacketEvent;
 import org.oryxel.gfp.protocol.event.MCPLPacketEvent;
 import org.oryxel.gfp.protocol.listener.BedrockPacketListener;
@@ -67,12 +70,26 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
 
             session.cachedVelocity = packet.getDelta();
             // Since Geyser no longer knows about our real position, we do the border check ourselves instead.
-            if (session.getOffset().lengthSquared() > 0) {
+            if (session.getOffset().getX() != 0 || session.getOffset().getZ() != 0) {
                 if (session.getSession().getWorldBorder().isPassingIntoBorderBoundaries(packet.getPosition().add(session.getOffset().toFloat()), true)) {
                     event.setCancelled(true);
                     return;
                 }
             }
+
+            boolean offsetNotZero = session.getOffset().getX() != 0 || session.getOffset().getZ() != 0;
+
+            Vector3i realIntPos = packet.getPosition().down(EntityDefinitions.PLAYER.offset()).toInt().add(session.getOffset());
+            if (realIntPos.distance(session.lastRealPosInt) > 0 && GFPExtension.showPositions.contains(session.getSession()) && offsetNotZero) {
+                SetTitlePacket titlePacket = new SetTitlePacket();
+                titlePacket.setType(SetTitlePacket.Type.ACTIONBAR);
+                titlePacket.setText("XYZ: " + realIntPos);
+                titlePacket.setXuid("");
+                titlePacket.setPlatformOnlineId("");
+                session.getSession().sendUpstreamPacket(titlePacket);
+            }
+
+            session.lastRealPosInt = realIntPos;
 
             if (Vector3f.from(packet.getPosition().getX(), 0, packet.getPosition().getZ()).length() < 2000) {
                 return;
@@ -146,7 +163,7 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
             final Vector3i newOffset = MathUtil.makeOffsetChunkSafe(Vector3d.from(realX - newX, 0, realZ - newZ));
 
             session.setOffset(newOffset);
-            if (newOffset.getX() != 0 || newOffset.getY() != 0 || newOffset.getZ() != 0) { // Always priority 0 0 0 offset.
+            if (newOffset.getX() != 0 || newOffset.getZ() != 0) { // Always priority 0 0 0 offset.
                 double oldOffsetX = realX - oldOffset.getX();
                 double oldOffsetZ = realZ - oldOffset.getZ();
 
@@ -186,7 +203,7 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
 
             event.getPostTasks().add(() -> {
                 // Offset changed and the server won't do it for us... Manually update chunk, and entity position.
-                session.getChunkCache().sendChunksWithOffset(oldOffset);
+                session.getChunkCache().sendChunksWithOffset();
                 session.getEntityCache().resendWithOffset();
                 session.sendWorldSpawn();
             });

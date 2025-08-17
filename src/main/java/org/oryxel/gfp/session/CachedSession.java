@@ -31,6 +31,7 @@ public class CachedSession {
     @Setter
     private Vector3i offset = Vector3i.from(0, 0 ,0);
 
+    public Vector3i lastRealPosInt = Vector3i.ZERO;
     public Vector3f rotation = Vector3f.ZERO;
     public Vector3f cachedVelocity = Vector3f.ZERO;
 
@@ -58,10 +59,9 @@ public class CachedSession {
 
         this.session.getPlayerEntity().setPositionManual(Vector3f.from(posX, this.getSession().getPlayerEntity().getPosition().getY(), posZ));
 
-        Vector3i oldOffset = this.offset.add(0, 0 , 0);
         this.offset = newOffset;
 
-        this.chunkCache.sendChunksWithOffset(oldOffset);
+        this.chunkCache.sendChunksWithOffset();
         this.entityCache.resendWithOffset();
         this.sendWorldSpawn();
     }

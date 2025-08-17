@@ -48,8 +48,6 @@ public class DimensionUtil {
         ackPacket.setFace(0);
         session.getSession().sendUpstreamPacket(ackPacket);
 
-        // TODO - fix this hack of a fix by sending the final dimension switching logic after sections have been sent.
-        // The client wants sections sent to it before it can successfully respawn.
         ChunkUtils.sendEmptyChunks(session.getSession(), session.getSession().getPlayerEntity().getPosition().toInt(), 3, true);
     }
 }

@@ -8,8 +8,6 @@ import lombok.RequiredArgsConstructor;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import org.cloudburstmc.math.vector.Vector3d;
-import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.level.JavaDimension;
 import org.geysermc.geyser.level.block.type.Block;
@@ -34,14 +32,7 @@ public class ChunkCache {
     private int minY;
     private int heightY;
 
-    public void sendChunksWithOffset(Vector3i oldOffset) {
-        Vector3f floatingPointPosition = session.getSession().getPlayerEntity().position();
-        Vector3d playerPosition = Vector3d.from(
-                Double.parseDouble(Float.toString(floatingPointPosition.getX())),
-                Double.parseDouble(Float.toString(floatingPointPosition.getY())),
-                Double.parseDouble(Float.toString(floatingPointPosition.getZ()))
-        ).add(this.session.getOffset().toDouble());
-
+    public void sendChunksWithOffset() {
         int oldDimension = session.getSession().getBedrockDimension().bedrockId();
 
         // Use dimension switch to quickly reset all previous chunks.
@@ -59,22 +50,6 @@ public class ChunkCache {
                 // Odd
                 continue;
             }
-
-            int x = oldPacket.getX() << 4, z = oldPacket.getZ() << 4;
-
-            // I won't like the CPU usage... Maybe abuse dimension switch or something else?
-            // ChunkUtils.sendEmptyChunk(session.getSession(), (x - oldOffset.getX()) >> 4, (z - oldOffset.getZ()) >> 4, true);
-
-//            System.out.println("Chunk pos: " + x + "," + z);
-//            System.out.println("Player pos: "  + playerPosition + ", NonOffset=" + floatingPointPosition);
-//            System.out.println("Offset: "  + playerPosition);
-//            System.out.println("Distance= " + playerPosition.distance(x, playerPosition.getY(), z));
-
-            // Is this correct???? I have no idea
-            // NOTE: No it is not.
-//            if (playerPosition.distance(x, playerPosition.getY(), z) > session.getSession().getServerRenderDistance() * 16) {
-//                continue;
-//            }
 
             ByteBuf oldByteBuf = Unpooled.wrappedBuffer(oldPacket.getChunkData());
             ByteBuf byteBuf = null;
