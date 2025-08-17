@@ -53,8 +53,8 @@ public class ChunkCache {
         session.silentDimensionSwitch = true;
 
         // This is a bad idea...
-        for (Map.Entry<Long, ChunkSection[]> entry : this.chunks.entrySet()) {
-            final ClientboundLevelChunkWithLightPacket oldPacket = this.chunkPackets.get(entry.getKey());
+        for (Long2ObjectMap.Entry<ChunkSection[]> entry : this.chunks.long2ObjectEntrySet()) {
+            final ClientboundLevelChunkWithLightPacket oldPacket = this.chunkPackets.get(entry.getLongKey());
             if (oldPacket == null) {
                 // Odd
                 continue;
