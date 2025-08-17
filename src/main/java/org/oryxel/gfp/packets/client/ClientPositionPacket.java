@@ -128,15 +128,11 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
 
         if (event.getPacket() instanceof ClientboundPlayerPositionPacket packet) {
             Vector3d pos = packet.getPosition();
+            Vector3f realPlayerPosition = entity.getPosition().add(session.getOffset().toFloat());
 
-            double realX = pos.getX() + (packet.getRelatives().contains(PositionElement.X) ? entity.getPosition().getX() : 0),
-                    realZ = pos.getZ() + (packet.getRelatives().contains(PositionElement.Z) ? entity.getPosition().getZ() : 0);
+            double realX = pos.getX() + (packet.getRelatives().contains(PositionElement.X) ? realPlayerPosition.getX() : 0),
+                    realZ = pos.getZ() + (packet.getRelatives().contains(PositionElement.Z) ? realPlayerPosition.getZ() : 0);
             double newX = realX, newZ = realZ;
-
-            // Too close, ignore.
-            if (entity.getPosition().distance(realX, entity.getPosition().getY(), realZ) < 0.1) {
-                return;
-            }
 
             if (Math.abs(newX) > 2000) {
                 newX = MathUtil.findNewPosition(newX);
@@ -147,8 +143,10 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
             }
 
             final Vector3i oldOffset = session.getOffset();
-            session.setOffset(MathUtil.makeOffsetChunkSafe(Vector3d.from(realX - newX, 0, realZ - newZ)));
-            if (session.getOffset().lengthSquared() > 0) { // Always priority 0 0 0 offset.
+            final Vector3i newOffset = MathUtil.makeOffsetChunkSafe(Vector3d.from(realX - newX, 0, realZ - newZ));
+
+            session.setOffset(newOffset);
+            if (newOffset.getX() != 0 || newOffset.getY() != 0 || newOffset.getZ() != 0) { // Always priority 0 0 0 offset.
                 double oldOffsetX = realX - oldOffset.getX();
                 double oldOffsetZ = realZ - oldOffset.getZ();
 
@@ -177,8 +175,7 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
             ));
 
             // Match 1 : 1, no need to update chunks.
-            if (oldOffset.getX() == session.getOffset().getX() && oldOffset.getY() == session.getOffset().getY() &&
-                    oldOffset.getZ() == session.getOffset().getZ()) {
+            if (oldOffset.getX() == session.getOffset().getX() && oldOffset.getZ() == session.getOffset().getZ()) {
                 return;
             }
 
