@@ -3,7 +3,9 @@ package org.oryxel.gfp.geyser.util;
 import org.cloudburstmc.protocol.bedrock.BedrockServerSession;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacketHandler;
 import org.geysermc.geyser.api.connection.GeyserConnection;
+import org.geysermc.geyser.session.DownstreamSession;
 import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.session.UpstreamSession;
 import org.geysermc.mcprotocollib.network.ClientSession;
 import org.geysermc.mcprotocollib.network.event.session.SessionListener;
 import org.oryxel.gfp.session.CachedSession;
@@ -53,14 +55,14 @@ public class GeyserUtil {
         final BedrockServerSession session = player.cloudburstDownstream;
         final Field upstream = GeyserSession.class.getDeclaredField("upstream");
         upstream.setAccessible(true);
-        upstream.set(player.getSession(), player.cloudburstUpstream = new CloudburstSendListener(player, session));
+        upstream.set(player.getSession(), player.cloudburstUpstream = new CloudburstSendListener(player, session, (UpstreamSession) upstream.get(player.getSession())));
     }
 
     private static ClientSession findClientSession(final GeyserConnection connection) throws Exception {
         final Field upstream = GeyserSession.class.getDeclaredField("downstream");
         upstream.setAccessible(true);
         final Object session = upstream.get(connection);
-        final Field field = session.getClass().getDeclaredField("session");
+        final Field field = DownstreamSession.class.getDeclaredField("session");
         field.setAccessible(true);
         return (ClientSession) field.get(session);
     }
@@ -69,7 +71,7 @@ public class GeyserUtil {
         final Field upstream = GeyserSession.class.getDeclaredField("upstream");
         upstream.setAccessible(true);
         final Object session = upstream.get(connection);
-        final Field field = session.getClass().getDeclaredField("session");
+        final Field field = UpstreamSession.class.getDeclaredField("session");
         field.setAccessible(true);
         return (BedrockServerSession) field.get(session);
     }

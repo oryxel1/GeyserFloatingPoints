@@ -15,10 +15,17 @@ import org.oryxel.gfp.geyser.util.GeyserUtil;
 
 public final class CloudburstSendListener extends UpstreamSession {
     private final CachedSession player;
+    private final UpstreamSession oldSession;
 
-    public CloudburstSendListener(CachedSession player, BedrockServerSession session) {
+    public CloudburstSendListener(CachedSession player, BedrockServerSession session, UpstreamSession oldSession) {
         super(session);
         this.player = player;
+        this.oldSession = oldSession;
+    }
+
+    @Override
+    public void disconnect(String reason) {
+        oldSession.disconnect(reason);
     }
 
     @Override
@@ -42,7 +49,7 @@ public final class CloudburstSendListener extends UpstreamSession {
             player.runtimeId = start.getRuntimeEntityId();
         }
 
-        super.sendPacket(event.getPacket());
+        oldSession.sendPacket(event.getPacket());
         event.getPostTasks().forEach(Runnable::run);
         event.getPostTasks().clear();
     }
@@ -58,7 +65,7 @@ public final class CloudburstSendListener extends UpstreamSession {
             return;
         }
 
-        super.sendPacketImmediately(event.getPacket());
+        oldSession.sendPacketImmediately(event.getPacket());
         event.getPostTasks().forEach(Runnable::run);
         event.getPostTasks().clear();
     }
