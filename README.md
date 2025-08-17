@@ -1,7 +1,7 @@
 # GeyserFloatingPoints
 Workaround to fix floating-point precision on Bedrock when at high coordinate.
 
-## How this wokrs
+## How this works
 - Simply works by spoofing position on Bedrock player side, making it seems like they're still close to 0 0 0 coordinate.
 
 ## Drawbacks
