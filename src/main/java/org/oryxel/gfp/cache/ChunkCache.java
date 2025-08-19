@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import org.cloudburstmc.math.vector.Vector3i;
-import org.geysermc.geyser.level.JavaDimension;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.util.DimensionUtils;
 import org.geysermc.geyser.util.MathUtils;
@@ -19,7 +18,6 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.Clien
 import org.oryxel.gfp.session.CachedSession;
 import org.oryxel.gfp.util.DimensionUtil;
 
-import java.util.Map;
 
 // https://github.com/GeyserMC/Geyser/blob/master/core/src/main/java/org/geysermc/geyser/session/cache/ChunkCache.java
 @RequiredArgsConstructor
@@ -28,9 +26,6 @@ public class ChunkCache {
     private final CachedSession session;
     private final Long2ObjectMap<ChunkSection[]> chunks = new Long2ObjectOpenHashMap<>();
     private final Long2ObjectMap<ClientboundLevelChunkWithLightPacket> chunkPackets = new Long2ObjectOpenHashMap<>();
-    @Getter
-    private int minY;
-    private int heightY;
 
     public void sendChunksWithOffset() {
         int oldDimension = session.getSession().getBedrockDimension().bedrockId();
@@ -110,19 +105,19 @@ public class ChunkCache {
             return;
         }
 
-        if (y < minY || ((y - minY) >> 4) > chunk.length - 1) {
+        if (y < getMinY() || ((y - getMinY()) >> 4) > chunk.length - 1) {
             // Y likely goes above or below the height limit of this world
             return;
         }
 
-        ChunkSection section = chunk[(y - minY) >> 4];
+        ChunkSection section = chunk[(y - getMinY()) >> 4];
         if (section == null) {
             if (block != Block.JAVA_AIR_ID) {
                 section = new ChunkSection();
                 // A previously empty chunk, which is no longer empty as a block has been added to it
                 // Fixes the chunk assuming that all blocks is the `block` variable we are updating. /shrug
                 section.getChunkData().getPalette().stateToId(Block.JAVA_AIR_ID);
-                chunk[(y - minY) >> 4] = section;
+                chunk[(y - getMinY()) >> 4] = section;
             } else {
                 // Nothing to update
                 return;
@@ -138,17 +133,15 @@ public class ChunkCache {
         this.chunkPackets.remove(chunkPosition);
     }
 
-    public void loadDimension() {
-        final JavaDimension dimension = session.getSession().getDimensionType();
-        this.minY = dimension.minY();
-        this.heightY = dimension.height();
+    public int getMinY() {
+        return (session.getSession().getChunkCache().getChunkMinY() << 4);
     }
 
-    public int getChunkMinY() {
-        return minY >> 4;
+    public int getHeightY() {
+        return (session.getSession().getChunkCache().getChunkHeightY() << 4);
     }
 
     public int getChunkHeightY() {
-        return heightY >> 4;
+        return session.getSession().getChunkCache().getChunkHeightY();
     }
 }

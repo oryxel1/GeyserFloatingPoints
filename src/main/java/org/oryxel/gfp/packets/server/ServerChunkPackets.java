@@ -92,9 +92,5 @@ public class ServerChunkPackets implements JavaPacketListener {
 
             event.setPacket(new ClientboundSectionBlocksUpdatePacket(packet.getChunkX(), packet.getChunkY(), packet.getChunkZ(), entries.toArray(new BlockChangeEntry[0])));
         }
-
-        if (event.getPacket() instanceof ClientboundRespawnPacket) {
-            session.getChunkCache().loadDimension();
-        }
     }
 }
