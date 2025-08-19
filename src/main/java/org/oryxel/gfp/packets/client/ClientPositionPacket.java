@@ -10,8 +10,6 @@ import org.cloudburstmc.protocol.bedrock.packet.SetEntityMotionPacket;
 import org.cloudburstmc.protocol.bedrock.packet.SetTitlePacket;
 import org.geysermc.geyser.entity.EntityDefinitions;
 import org.geysermc.geyser.entity.type.player.SessionPlayerEntity;
-import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.text.ChatColor;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.PositionElement;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerPositionPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.ServerboundMoveVehiclePacket;
@@ -64,7 +62,7 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
             }
 
             // This move ain't valid for re offset!
-            if (!isValidMove(session.getSession(), session.getSession().getPlayerEntity().getPosition(), packet.getPosition())) {
+            if (!isValidMove(packet.getPosition())) {
                 return;
             }
 
@@ -219,18 +217,8 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
         }
     }
 
-    private static boolean isValidMove(GeyserSession session, Vector3f currentPosition, Vector3f newPosition) {
-        if (isInvalidNumber(newPosition.getX()) || isInvalidNumber(newPosition.getY()) || isInvalidNumber(newPosition.getZ())) {
-            return false;
-        }
-        if (currentPosition.distanceSquared(newPosition) > 15) {
-            session.getGeyser().getLogger().debug(ChatColor.RED + session.bedrockUsername() + " moved too quickly." +
-                    " current position: " + currentPosition + ", new position: " + newPosition);
-
-            return false;
-        }
-
-        return true;
+    private static boolean isValidMove(Vector3f newPosition) {
+        return !isInvalidNumber(newPosition.getX()) && !isInvalidNumber(newPosition.getY()) && !isInvalidNumber(newPosition.getZ());
     }
 
     private static boolean isInvalidNumber(float val) {
