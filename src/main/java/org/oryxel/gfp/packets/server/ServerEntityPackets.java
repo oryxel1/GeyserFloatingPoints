@@ -1,10 +1,17 @@
 package org.oryxel.gfp.packets.server;
 
 import org.cloudburstmc.math.vector.Vector3d;
+import org.cloudburstmc.math.vector.Vector3i;
+import org.geysermc.mcprotocollib.protocol.data.game.entity.metadata.EntityMetadata;
+import org.geysermc.mcprotocollib.protocol.data.game.entity.metadata.MetadataTypes;
+import org.geysermc.mcprotocollib.protocol.data.game.entity.metadata.type.ObjectEntityMetadata;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.*;
 import org.oryxel.gfp.protocol.event.MCPLPacketEvent;
 import org.oryxel.gfp.protocol.listener.JavaPacketListener;
 import org.oryxel.gfp.session.CachedSession;
+
+import java.util.ArrayList;
+import java.util.Optional;
 
 public class ServerEntityPackets implements JavaPacketListener {
     @Override
@@ -27,6 +34,33 @@ public class ServerEntityPackets implements JavaPacketListener {
             for (int id : packet.getEntityIds()) {
                 session.getEntityCache().remove(id);
             }
+        }
+
+        if (event.getPacket() instanceof ClientboundSetEntityDataPacket packet) {
+            ArrayList<EntityMetadata<?, ?>> list = new ArrayList<>();
+
+            for (EntityMetadata<?, ?> meta : packet.getMetadata()) {
+                if (meta.getId() == 14 && meta.getType() == MetadataTypes.OPTIONAL_BLOCK_POS) {
+                    Object value = meta.getValue();
+
+                    if (value instanceof Optional<?> opt && opt.isPresent()) {
+                        Object inner = opt.get();
+
+                        if (inner instanceof Vector3i pos) {
+                            list.add(new ObjectEntityMetadata<>(
+                                    meta.getId(),
+                                    MetadataTypes.OPTIONAL_BLOCK_POS,
+                                    Optional.of(pos.sub(session.getOffset()))
+                            ));
+                            continue;
+                        }
+                    }
+                }
+
+                list.add(meta);
+            }
+
+            event.setPacket(new ClientboundSetEntityDataPacket(packet.getEntityId(), list.toArray(EntityMetadata[]::new)));
         }
 
         if (event.getPacket() instanceof ClientboundEntityPositionSyncPacket packet) {
