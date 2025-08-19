@@ -45,7 +45,7 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
                 motion.setMotion(session.cachedVelocity);
                 motion.setRuntimeEntityId(session.runtimeId);
 
-                session.cloudburstDownstream.sendPacketImmediately(motion);
+                session.getSession().sendUpstreamPacketImmediately(motion);
             }
         }
 
