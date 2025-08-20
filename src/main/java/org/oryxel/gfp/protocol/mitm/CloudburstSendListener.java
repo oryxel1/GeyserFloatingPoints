@@ -6,6 +6,7 @@ import org.cloudburstmc.protocol.bedrock.BedrockServerSession;
 import org.cloudburstmc.protocol.bedrock.data.AuthoritativeMovementMode;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
 import org.cloudburstmc.protocol.bedrock.packet.StartGamePacket;
+import org.cloudburstmc.protocol.bedrock.packet.UpdateClientInputLocksPacket;
 import org.geysermc.geyser.session.UpstreamSession;
 import org.oryxel.gfp.session.CachedSession;
 import org.oryxel.gfp.protocol.PacketEvents;
@@ -30,6 +31,10 @@ public final class CloudburstSendListener extends UpstreamSession {
 
     @Override
     public void sendPacket(@NonNull BedrockPacket packet) {
+        if (packet instanceof UpdateClientInputLocksPacket) { // Hacks.
+            return;
+        }
+
         final CloudburstPacketEvent event = new CloudburstPacketEvent(this.player, packet);
         for (final BedrockPacketListener listener : PacketEvents.getApi().getBedrockListeners()) {
             listener.onPacketSend(event, false);
