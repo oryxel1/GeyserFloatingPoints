@@ -23,16 +23,18 @@ dependencies {
     compileOnly("org.geysermc.geyser:core:2.7.1-SNAPSHOT") {
         exclude group: "com.google.code.gson", module: "gson"
     }
-    compileOnly("it.unimi.dsi:fastutil:8.5.15")
+
+    implementation("it.unimi.dsi:fastutil:8.5.15")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.2")
+
     compileOnly("org.projectlombok:lombok:1.18.36")
     annotationProcessor("org.projectlombok:lombok:1.18.36")
-
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.2")
 }
 
 shadowJar {
     relocate 'org.yaml.snakeyaml', 'org.oryxel.gfp.shaded.snakeyaml'
     relocate 'com.fasterxml', 'org.oryxel.gfp.shaded.fasterxml'
+    relocate 'it.unimi.dsi.fastutil', 'org.oryxel.gfp.shaded.fastutil'
 }
 
 def targetJavaVersion = 17
