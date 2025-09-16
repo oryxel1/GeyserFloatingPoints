@@ -1,6 +1,7 @@
 package org.oryxel.gfp.geyser;
 
 import org.geysermc.event.subscribe.Subscribe;
+import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.api.command.Command;
 import org.geysermc.geyser.api.command.CommandSource;
 import org.geysermc.geyser.api.event.bedrock.SessionDisconnectEvent;
@@ -10,6 +11,7 @@ import org.geysermc.geyser.api.event.lifecycle.GeyserPostInitializeEvent;
 import org.geysermc.geyser.api.event.lifecycle.GeyserShutdownEvent;
 import org.geysermc.geyser.api.extension.Extension;
 import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.mcprotocollib.protocol.data.game.chunk.DataPalette;
 import org.oryxel.gfp.GeyserFloatingPoints;
 import org.oryxel.gfp.config.Config;
 import org.oryxel.gfp.config.ConfigLoader;
@@ -34,6 +36,13 @@ public class GFPExtension implements Extension {
 
     @Subscribe
     public void onGeyserPostInitializeEvent(GeyserPostInitializeEvent event) {
+        try {
+            DataPalette.class.getMethod("createForBlockState", int.class, int.class);
+        } catch (Exception exception) {
+            GeyserImpl.getInstance().getExtensionManager().disable(this);
+            throw new RuntimeException("Outdated Geyser build!!!!! Please update to at least 9f8bc9db and above!");
+        }
+
         config = ConfigLoader.load(this, GFPExtension.class, Config.class);
         GeyserFloatingPoints.getInstance().init();
     }

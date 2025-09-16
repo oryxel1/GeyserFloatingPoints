@@ -19,7 +19,6 @@ public class GeyserFloatingPoints {
         PacketEvents.getApi().registerJava(new ClientPositionPacket());
 
         PacketEvents.getApi().registerJava(new ClientPlayerAction());
-        PacketEvents.getApi().registerBedrock(new ClientPlayerAction());
 
         PacketEvents.getApi().registerJava(new ServerChunkPackets());
         PacketEvents.getApi().registerJava(new ServerEntityPackets());

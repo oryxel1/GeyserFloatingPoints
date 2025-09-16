@@ -1,6 +1,6 @@
 id: geyserfloatingpoints
 name: GeyserFloatingPoints.
 main: org.oryxel.gfp.geyser.GFPExtension
-api: 2.7.1
-version: 1.2
+api: 2.8.3
+version: 1.3
 authors: [oryxel]

@@ -2,10 +2,11 @@ package org.oryxel.gfp.packets.server;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import org.geysermc.geyser.registry.BlockRegistries;
+import org.geysermc.geyser.session.cache.registry.JavaRegistries;
 import org.geysermc.mcprotocollib.protocol.codec.MinecraftTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.ChunkSection;
 import org.geysermc.mcprotocollib.protocol.data.game.level.block.BlockChangeEntry;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundRespawnPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.*;
 import org.oryxel.gfp.protocol.event.MCPLPacketEvent;
 import org.oryxel.gfp.protocol.listener.JavaPacketListener;
@@ -56,7 +57,7 @@ public class ServerChunkPackets implements JavaPacketListener {
             final ChunkSection[] palette = new ChunkSection[chunkSize];
             final ByteBuf in = Unpooled.wrappedBuffer(packet.getChunkData());
             for (int sectionY = 0; sectionY < chunkSize; sectionY++) {
-                palette[sectionY] = MinecraftTypes.readChunkSection(in);
+                palette[sectionY] = MinecraftTypes.readChunkSection(in, BlockRegistries.BLOCK_STATES.get().size(), session.getSession().getRegistryCache().registry(JavaRegistries.BIOME).size());
             }
             session.getChunkCache().addToCache(packet, palette);
 
@@ -72,8 +73,6 @@ public class ServerChunkPackets implements JavaPacketListener {
                     packet.getHeightMaps(), packet.getBlockEntities(), packet.getLightData()
             ));
         }
-
-        // System.out.println(event.getPacket());
 
         if (event.getPacket() instanceof ClientboundBlockUpdatePacket packet) {
             session.getChunkCache().updateBlock(packet.getEntry().getPosition(), packet.getEntry().getBlock());

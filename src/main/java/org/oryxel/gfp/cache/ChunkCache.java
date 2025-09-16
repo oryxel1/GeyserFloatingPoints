@@ -10,6 +10,9 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.level.block.type.Block;
+import org.geysermc.geyser.registry.BlockRegistries;
+import org.geysermc.geyser.session.cache.registry.JavaRegistries;
+import org.geysermc.geyser.session.cache.registry.JavaRegistry;
 import org.geysermc.geyser.util.DimensionUtils;
 import org.geysermc.geyser.util.MathUtils;
 import org.geysermc.mcprotocollib.protocol.codec.MinecraftTypes;
@@ -50,7 +53,8 @@ public class ChunkCache {
             ByteBuf byteBuf = null;
             try {
                 for (int sectionY = 0; sectionY < this.getChunkHeightY(); sectionY++) {
-                    MinecraftTypes.readChunkSection(oldByteBuf);
+                    MinecraftTypes.readChunkSection(oldByteBuf, BlockRegistries.BLOCK_STATES.get().size(),
+                            session.getSession().getRegistryCache().registry(JavaRegistries.BIOME).size());
                 }
 
                 byteBuf = ByteBufAllocator.DEFAULT.ioBuffer();
@@ -113,10 +117,11 @@ public class ChunkCache {
         ChunkSection section = chunk[(y - getMinY()) >> 4];
         if (section == null) {
             if (block != Block.JAVA_AIR_ID) {
-                section = new ChunkSection();
+                final JavaRegistry<Integer> registryKey = session.getSession().getRegistryCache().registry(JavaRegistries.BIOME);
+
                 // A previously empty chunk, which is no longer empty as a block has been added to it
                 // Fixes the chunk assuming that all blocks is the `block` variable we are updating. /shrug
-                section.getChunkData().getPalette().stateToId(Block.JAVA_AIR_ID);
+                section = new ChunkSection(Block.JAVA_AIR_ID, BlockRegistries.BLOCK_STATES.get().size(), registryKey.values().get(0), registryKey.size());
                 chunk[(y - getMinY()) >> 4] = section;
             } else {
                 // Nothing to update

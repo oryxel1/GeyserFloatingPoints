@@ -8,6 +8,7 @@ import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.UpstreamSession;
 import org.geysermc.mcprotocollib.network.ClientSession;
 import org.geysermc.mcprotocollib.network.event.session.SessionListener;
+import org.oryxel.gfp.handler.GFPBlockBreakHandler;
 import org.oryxel.gfp.session.CachedSession;
 import org.oryxel.gfp.protocol.mitm.CloudburstReceiveListener;
 import org.oryxel.gfp.protocol.mitm.CloudburstSendListener;
@@ -21,6 +22,7 @@ public class GeyserUtil {
     public static void hookIntoCloudburstMC(final CachedSession session) {
         final GeyserConnection connection = session.getSession();
 
+        session.getSession().setBlockBreakHandler(new GFPBlockBreakHandler(session));
         try {
             session.cloudburstDownstream = findCloudburstSession(connection);
 
