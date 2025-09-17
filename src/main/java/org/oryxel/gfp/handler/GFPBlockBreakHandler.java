@@ -76,8 +76,8 @@ public class GFPBlockBreakHandler extends BlockBreakHandler {
 
     @Override
     protected boolean canBreak(Vector3i vector, BlockState state) {
+        vector = vector.add(cachedSession.getOffset());
         if (session.getGeyser().getWorldManager().hasOwnChunkCache()) {
-            vector = vector.add(cachedSession.getOffset());
             state = this.session.getGeyser().getWorldManager().blockAt(this.session, vector);
         }
 
