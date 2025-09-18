@@ -1,2 +1,5 @@
 # Max X/Z position player can reach before GeyserFloatingPoints re-position them to a position that is closer to 0 0 0.
 capped-value: 3000
+
+# Show real player position by default without running the command.
+show-position-by-default: true

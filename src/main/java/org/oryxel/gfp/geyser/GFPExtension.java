@@ -27,6 +27,9 @@ public class GFPExtension implements Extension {
     @Subscribe
     public void onSessionJoin(SessionLoginEvent event) {
         new CachedSession((GeyserSession) event.connection());
+        if (config.showPositionByDefault()) {
+            showPositions.add((GeyserSession) event.connection());
+        }
     }
 
     @Subscribe
