@@ -75,10 +75,8 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
                 }
             }
 
-            boolean offsetNotZero = session.getOffset().getX() != 0 || session.getOffset().getZ() != 0;
-
             Vector3i realIntPos = packet.getPosition().down(EntityDefinitions.PLAYER.offset()).toInt().add(session.getOffset());
-            if (realIntPos.distance(session.lastRealPosInt) > 0 && GFPExtension.showPositions.contains(session.getSession()) && offsetNotZero) {
+            if (realIntPos.distance(session.lastRealPosInt) > 0 && GFPExtension.showPositions.contains(session.getSession())) {
                 SetTitlePacket titlePacket = new SetTitlePacket();
                 titlePacket.setType(SetTitlePacket.Type.ACTIONBAR);
                 titlePacket.setText("XYZ: " + realIntPos);

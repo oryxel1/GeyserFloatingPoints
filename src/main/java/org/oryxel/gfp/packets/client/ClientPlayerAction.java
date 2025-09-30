@@ -1,5 +1,6 @@
 package org.oryxel.gfp.packets.client;
 
+import org.geysermc.geyser.util.BlockUtils;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.PlayerAction;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundBlockDestructionPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundPickItemFromBlockPacket;
@@ -23,8 +24,12 @@ public class ClientPlayerAction implements JavaPacketListener {
         if (event.getPacket() instanceof ServerboundPlayerActionPacket packet) {
             PlayerAction action = packet.getAction();
 
-            if (action == PlayerAction.START_DIGGING || action == PlayerAction.FINISH_DIGGING || action == PlayerAction.CANCEL_DIGGING) {
+            if (action == PlayerAction.START_DIGGING || action == PlayerAction.FINISH_DIGGING) {
                 return;
+            }
+
+            if (action == PlayerAction.CANCEL_DIGGING) {
+                BlockUtils.sendBedrockStopBlockBreak(session.getSession(), packet.getPosition().toFloat());
             }
 
             event.setPacket(new ServerboundPlayerActionPacket(packet.getAction(),
