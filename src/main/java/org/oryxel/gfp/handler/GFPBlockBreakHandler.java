@@ -48,9 +48,8 @@ public class GFPBlockBreakHandler extends BlockBreakHandler {
         Vector3i fireBlockPos = BlockUtils.getBlockPosition(offsetPos, blockFace);
         Block possibleFireBlock = session.getGeyser().getWorldManager().blockAt(session, fireBlockPos).block();
         if (possibleFireBlock == Blocks.FIRE || possibleFireBlock == Blocks.SOUL_FIRE) {
-            ServerboundPlayerActionPacket startBreakingPacket = new ServerboundPlayerActionPacket(PlayerAction.START_DIGGING, position.add(cachedSession.getOffset()),
-                    blockFace.mcpl(), session.getWorldCache().nextPredictionSequence());
-            session.sendDownstreamGamePacket(startBreakingPacket);
+            ServerboundPlayerActionPacket startBreakingPacket = new ServerboundPlayerActionPacket(PlayerAction.START_DIGGING, BlockUtils.getBlockPosition(position, blockFace).add(cachedSession.getOffset()), blockFace.mcpl(), this.session.getWorldCache().nextPredictionSequence());
+            this.session.sendDownstreamGamePacket(startBreakingPacket);
         }
 
         // % block breaking progress in this tick
@@ -86,7 +85,7 @@ public class GFPBlockBreakHandler extends BlockBreakHandler {
             // but also #continueDestroyBlock in the same tick to advance the break progress.
             this.currentProgress = breakProgress;
 
-            session.sendDownstreamGamePacket(new ServerboundPlayerActionPacket(PlayerAction.START_DIGGING, position,
+            session.sendDownstreamGamePacket(new ServerboundPlayerActionPacket(PlayerAction.START_DIGGING, position.add(cachedSession.getOffset()),
                     blockFace.mcpl(), session.getWorldCache().nextPredictionSequence()));
         }
     }
