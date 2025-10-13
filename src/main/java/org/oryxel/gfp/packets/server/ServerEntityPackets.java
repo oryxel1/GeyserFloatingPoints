@@ -24,9 +24,9 @@ public class ServerEntityPackets implements JavaPacketListener {
             event.setPacket(new ClientboundAddEntityPacket(
                     packet.getEntityId(), packet.getUuid(), packet.getType(), packet.getData(),
                     packet.getX() - session.getOffset().getX(),
-                    packet.getY(), packet.getZ() - session.getOffset().getZ(),
-                    packet.getYaw(), packet.getHeadYaw(), packet.getPitch(),
-                    packet.getMotionX(), packet.getMotionY(), packet.getMotionZ()
+                    packet.getY(),
+                    packet.getZ() - session.getOffset().getZ(),
+                    packet.getMovement(), packet.getYaw(), packet.getHeadYaw(), packet.getPitch()
             ));
         }
 

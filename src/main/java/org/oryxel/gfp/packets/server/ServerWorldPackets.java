@@ -1,6 +1,8 @@
 package org.oryxel.gfp.packets.server;
 
 import org.cloudburstmc.protocol.bedrock.packet.ChangeDimensionPacket;
+import org.cloudburstmc.protocol.bedrock.packet.SetSpawnPositionPacket;
+import org.geysermc.geyser.util.DimensionUtils;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerLookAtPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.*;
 import org.oryxel.gfp.protocol.event.CloudburstPacketEvent;
@@ -35,7 +37,8 @@ public class ServerWorldPackets implements JavaPacketListener, BedrockPacketList
 
         if (event.getPacket() instanceof ClientboundExplodePacket packet) {
             event.setPacket(new ClientboundExplodePacket(packet.getCenter().sub(session.getOffset().toDouble()),
-                    packet.getPlayerKnockback(), packet.getExplosionParticle(), packet.getExplosionSound()));
+                    packet.getRadius(), packet.getBlockCount(),
+                    packet.getPlayerKnockback(), packet.getExplosionParticle(), packet.getExplosionSound(), packet.getBlockParticles()));
         }
 
         if (event.getPacket() instanceof ClientboundOpenSignEditorPacket packet) {
@@ -47,8 +50,15 @@ public class ServerWorldPackets implements JavaPacketListener, BedrockPacketList
         }
 
         if (event.getPacket() instanceof ClientboundSetDefaultSpawnPositionPacket packet) {
-            session.worldSpawn = packet.getPosition();
-            event.setPacket(new ClientboundSetDefaultSpawnPositionPacket(packet.getPosition().sub(session.getOffset()), packet.getAngle()));
+            session.worldSpawn = packet.getGlobalPos().getPosition();
+
+            SetSpawnPositionPacket spawnPositionPacket = new SetSpawnPositionPacket();
+            spawnPositionPacket.setBlockPosition(packet.getGlobalPos().getPosition().sub(session.getOffset()));
+            spawnPositionPacket.setDimensionId(DimensionUtils.javaToBedrock(packet.getGlobalPos().getDimension().asString()));
+            spawnPositionPacket.setSpawnType(SetSpawnPositionPacket.Type.WORLD_SPAWN);
+
+            session.getSession().sendUpstreamPacket(spawnPositionPacket);
+            event.setCancelled(true);
         }
     }
 
