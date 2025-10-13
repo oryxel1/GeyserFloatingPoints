@@ -54,7 +54,8 @@ public class ServerWorldPackets implements JavaPacketListener, BedrockPacketList
 
             SetSpawnPositionPacket spawnPositionPacket = new SetSpawnPositionPacket();
             spawnPositionPacket.setBlockPosition(packet.getGlobalPos().getPosition().sub(session.getOffset()));
-            spawnPositionPacket.setDimensionId(DimensionUtils.javaToBedrock(packet.getGlobalPos().getDimension().asString()));
+            // uhm...
+            spawnPositionPacket.setDimensionId(session.getSession().getBedrockDimension().bedrockId());
             spawnPositionPacket.setSpawnType(SetSpawnPositionPacket.Type.WORLD_SPAWN);
 
             session.getSession().sendUpstreamPacket(spawnPositionPacket);
