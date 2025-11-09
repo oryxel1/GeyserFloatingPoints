@@ -56,7 +56,7 @@ modrinth {
     versionType = "release"
     uploadFile = shadowJar
     gameVersions = ["1.21.8"]
-    loaders = ["bukkit", "paper", "spigot", "bungeecord", "velocity"]
+    loaders = ["geyser"]
 }
 
 def getCommitMessage() {
