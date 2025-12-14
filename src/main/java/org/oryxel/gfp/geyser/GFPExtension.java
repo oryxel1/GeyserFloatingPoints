@@ -10,6 +10,7 @@ import org.geysermc.geyser.api.event.lifecycle.GeyserDefineCommandsEvent;
 import org.geysermc.geyser.api.event.lifecycle.GeyserPostInitializeEvent;
 import org.geysermc.geyser.api.event.lifecycle.GeyserShutdownEvent;
 import org.geysermc.geyser.api.extension.Extension;
+import org.geysermc.geyser.api.util.TriState;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.DataPalette;
 import org.oryxel.gfp.GeyserFloatingPoints;
@@ -59,13 +60,13 @@ public class GFPExtension implements Extension {
     public void onDefineCommands(GeyserDefineCommandsEvent event) {
         event.register(Command.builder(this).source(CommandSource.class)
                 .name("position")
-                .playerOnly(true).bedrockOnly(true)
+                .playerOnly(true).bedrockOnly(true).permission("geyserfloatingpoints.position", TriState.TRUE)
                 .description("Toggle off/on title to show your real position, won't show anything if your current position is in fact real.")
                 .executor((source, cmd, args) -> {
                     if (source.connection() instanceof GeyserSession session) {
                         if (showPositions.contains(session)) {
                             showPositions.remove(session);
-                            source.sendMessage("Stop showing your position!");
+                            source.sendMessage("Stopped showing your position!");
                         } else {
                             showPositions.add(session);
                             source.sendMessage("Now showing your position!");
