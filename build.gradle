@@ -20,7 +20,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("org.geysermc.geyser:core:2.9.0-SNAPSHOT") {
+    compileOnly("org.geysermc.geyser:core:2.9.3-SNAPSHOT") {
         exclude group: "com.google.code.gson", module: "gson"
     }
 
