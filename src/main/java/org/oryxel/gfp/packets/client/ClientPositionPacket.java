@@ -87,7 +87,7 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
 
             session.lastRealPosInt = realIntPos;
 
-            if (Vector3f.from(packet.getPosition().getX(), 0, packet.getPosition().getZ()).length() < GFPExtension.config.maxPosition()) {
+            if (Math.abs(packet.getPosition().getX()) <= GFPExtension.config.maxPosition() && Math.abs(packet.getPosition().getZ()) <= GFPExtension.config.maxPosition()) {
                 return;
             }
 
@@ -203,6 +203,7 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
                 session.getChunkCache().sendChunksWithOffset();
                 session.getEntityCache().resendWithOffset();
                 session.sendWorldSpawn();
+                session.resendVehicle();
             });
         }
     }

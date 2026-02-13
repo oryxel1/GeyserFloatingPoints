@@ -5,7 +5,10 @@ import lombok.Setter;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.BedrockServerSession;
+import org.cloudburstmc.protocol.bedrock.data.entity.EntityLinkData;
+import org.cloudburstmc.protocol.bedrock.packet.SetEntityLinkPacket;
 import org.cloudburstmc.protocol.bedrock.packet.SetSpawnPositionPacket;
+import org.geysermc.geyser.entity.type.Entity;
 import org.geysermc.geyser.entity.type.player.SessionPlayerEntity;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.DimensionUtils;
@@ -29,7 +32,7 @@ public class CachedSession {
 
     @Getter
     @Setter
-    private Vector3i offset = Vector3i.from(0, 0 ,0);
+    private Vector3i offset = Vector3i.from(0, 0, 0);
 
     public Vector3i lastRealPosInt = Vector3i.ZERO;
     public Vector3f rotation = Vector3f.ZERO;
@@ -64,6 +67,7 @@ public class CachedSession {
         this.chunkCache.sendChunksWithOffset();
         this.entityCache.resendWithOffset();
         this.sendWorldSpawn();
+        this.resendVehicle();
     }
 
     public void sendWorldSpawn() {
@@ -76,5 +80,36 @@ public class CachedSession {
         spawnPositionPacket.setDimensionId(DimensionUtils.javaToBedrock(this.session));
         spawnPositionPacket.setSpawnType(SetSpawnPositionPacket.Type.WORLD_SPAWN);
         this.session.sendUpstreamPacket(spawnPositionPacket);
+    }
+
+    public void resendVehicle() {
+        SessionPlayerEntity player = this.session.getPlayerEntity();
+
+        Entity vehicle = player.getVehicle();
+        if (vehicle == null) {
+            return;
+        }
+
+        SetEntityLinkPacket unmount = new SetEntityLinkPacket();
+        unmount.setEntityLink(new EntityLinkData(
+                vehicle.geyserId(),
+                player.geyserId(),
+                EntityLinkData.Type.REMOVE,
+                false,
+                false,
+                0f)
+        );
+        SetEntityLinkPacket mount = new SetEntityLinkPacket();
+        mount.setEntityLink(new EntityLinkData(
+                vehicle.geyserId(),
+                player.geyserId(),
+                EntityLinkData.Type.RIDER,
+                false,
+                false,
+                0f)
+        );
+
+        this.session.sendUpstreamPacket(unmount);
+        this.session.sendUpstreamPacket(mount);
     }
 }
