@@ -67,7 +67,7 @@ public class GFPBlockBreakHandler extends BlockBreakHandler {
             CustomBlockState blockStateOverride = BlockRegistries.CUSTOM_BLOCK_STATE_OVERRIDES.get(state.javaId());
             SkullCache.Skull skull = session.getSkullCache().getSkulls().get(position);
             this.serverSideBlockBreaking = BlockRegistries.NON_VANILLA_BLOCK_IDS.get().get(state.javaId()) || blockStateOverride != null ||
-                    customItem != null || session.getItemMappings().getNonVanillaCustomItemIds().contains(item.getJavaId()) || (skull != null && skull.getBlockDefinition() != null);
+                    customItem != null || /* session.getItemMappings().getNonVanillaCustomItemIds().contains(item.getJavaId()) */ || (skull != null && skull.getBlockDefinition() != null);
 
             LevelEventPacket startBreak = new LevelEventPacket();
             startBreak.setType(LevelEvent.BLOCK_START_BREAK);
