@@ -57,7 +57,8 @@ public class CachedSession {
     public void reOffsetPlayer(double x, double z, Vector3i newOffset) {
         float posX = Float.parseFloat(Double.toString(x)), posZ = Float.parseFloat(Double.toString(z));
 
-        this.session.getPlayerEntity().setPositionFromBedrockPos(Vector3f.from(posX, this.getSession().getPlayerEntity().getPosition().getY(), posZ));
+        final SessionPlayerEntity playerEntity = this.session.getPlayerEntity();
+        playerEntity.setPositionFromBedrockPos(Vector3f.from(posX, playerEntity.getPosition().getY() + playerEntity.getOffset(), posZ));
 
         this.offset = newOffset;
 
