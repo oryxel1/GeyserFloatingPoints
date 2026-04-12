@@ -17,6 +17,10 @@ public class MCPLMiddleListener extends SessionAdapter {
     private final CachedSession player;
     private final List<SessionListener> listeners;
 
+    public void silentPacketReceived(Packet packet) {
+        listeners.forEach(l -> l.packetReceived(player.getSession().getDownstream().getSession(), packet));
+    }
+
     @Override
     public void packetReceived(Session session, Packet packet) {
         // if (session != player.getTcpSession()) return;

@@ -9,18 +9,18 @@ import org.cloudburstmc.protocol.bedrock.packet.SetSpawnPositionPacket;
 import org.geysermc.geyser.entity.type.player.SessionPlayerEntity;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.DimensionUtils;
-import org.geysermc.mcprotocollib.network.ClientSession;
 import org.oryxel.gfp.cache.ChunkCache;
 import org.oryxel.gfp.cache.EntityCache;
 import org.oryxel.gfp.geyser.util.GeyserUtil;
 import org.oryxel.gfp.protocol.mitm.CloudburstReceiveListener;
 import org.oryxel.gfp.protocol.mitm.CloudburstSendListener;
+import org.oryxel.gfp.protocol.mitm.MCPLMiddleListener;
 
 public class CachedSession {
     @Getter
     private final GeyserSession session;
 
-    public ClientSession mcplSession;
+    public MCPLMiddleListener mcplMiddleListener;
     public BedrockServerSession cloudburstDownstream;
     public CloudburstSendListener cloudburstUpstream;
     public CloudburstReceiveListener downstreamPacketHandler;

@@ -69,10 +69,16 @@ public class ChunkCache {
                 byte[] payload = new byte[byteBuf.readableBytes()];
                 byteBuf.readBytes(payload);
 
+                int chunkBlockX = oldPacket.getX() << 4;
+                int chunkBlockZ = oldPacket.getZ() << 4;
+
+                chunkBlockX -= session.getOffset().getX();
+                chunkBlockZ -= session.getOffset().getZ();
+
                 // Yep.
-                this.session.mcplSession.callPacketReceived(
-                        new ClientboundLevelChunkWithLightPacket(oldPacket.getX(),
-                                oldPacket.getZ(), payload, oldPacket.getHeightMaps(), oldPacket.getBlockEntities(), oldPacket.getLightData())
+                this.session.mcplMiddleListener.silentPacketReceived(
+                        new ClientboundLevelChunkWithLightPacket(chunkBlockX >> 4,
+                                chunkBlockZ >> 4, payload, oldPacket.getHeightMaps(), oldPacket.getBlockEntities(), oldPacket.getLightData())
                 );
             } finally {
                 if (byteBuf != null) {

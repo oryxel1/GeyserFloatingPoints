@@ -39,9 +39,7 @@ public class GeyserUtil {
 
             List<SessionListener> adapters = new ArrayList<>(session.getListeners());
             session.getListeners().forEach(session::removeListener);
-            session.addListener(new MCPLMiddleListener(player, adapters));
-
-            player.mcplSession = session;
+            session.addListener(player.mcplMiddleListener = new MCPLMiddleListener(player, adapters));
         } catch (Exception ignored) {
             player.kick("Failed to hook into mcpl session!");
         }

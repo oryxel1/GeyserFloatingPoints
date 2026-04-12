@@ -14,6 +14,7 @@ public class DimensionUtil {
 
     // Slight modifications.
     public static void switchDimension(CachedSession session, int bedrockDimension, boolean real) {
+        session.getSession().getChunkCache().clear();
         if (session.getSession().getServerRenderDistance() > 32 && !session.getSession().isEmulatePost1_13Logic()) {
             // The server-sided view distance wasn't a thing until Minecraft Java 1.14
             // So ViaVersion compensates by sending a "view distance" of 64

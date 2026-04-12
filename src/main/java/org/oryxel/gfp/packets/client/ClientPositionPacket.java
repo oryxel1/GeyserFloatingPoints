@@ -8,8 +8,15 @@ import org.cloudburstmc.protocol.bedrock.packet.PlayerAuthInputPacket;
 import org.cloudburstmc.protocol.bedrock.packet.ServerboundLoadingScreenPacket;
 import org.cloudburstmc.protocol.bedrock.packet.SetEntityMotionPacket;
 import org.cloudburstmc.protocol.bedrock.packet.SetTitlePacket;
+import org.geysermc.erosion.util.BlockPositionIterator;
+import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.entity.EntityDefinitions;
 import org.geysermc.geyser.entity.type.player.SessionPlayerEntity;
+import org.geysermc.geyser.level.physics.BoundingBox;
+import org.geysermc.geyser.level.physics.CollisionManager;
+import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.translator.collision.BlockCollision;
+import org.geysermc.geyser.util.BlockUtils;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.PositionElement;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerPositionPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.ServerboundMoveVehiclePacket;
@@ -107,25 +114,67 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
         }
     }
 
+    // Hack to fix floating point errors and other movement fixes, since Geyser movement correction code is now incorrect :D
+    // due to the offsetting.
+    private Vector3d correctPosition(GeyserSession session, Vector3d vector3d) {
+        if (!GeyserImpl.getInstance().getWorldManager().hasOwnChunkCache()) {
+            return vector3d; // no need for this.
+        }
+
+        BoundingBox box = session.getCollisionManager().getPlayerBoundingBox().clone();
+        box.setMiddleX(vector3d.getX());
+        box.setMiddleY(vector3d.getY() + box.getSizeY() / 2);
+        box.setMiddleZ(vector3d.getZ());
+
+        // Copy pasted Gayser correction code.
+        BlockPositionIterator iter = session.getCollisionManager().collidableBlocksIterator(box);
+        int[] blocks = session.getGeyser().getWorldManager().getBlocksAt(session, iter);
+
+        // Main correction code
+        for (iter.reset(); iter.hasNext(); iter.next()) {
+            final int blockId = blocks[iter.getIteration()];
+
+            // Can't call this, relocation is ass...
+//            if (session.getBlockMappings().getCollisionIgnoredBlocks().contains(blockId)) {
+//                continue;
+//            }
+
+            BlockCollision blockCollision = BlockUtils.getCollision(blockId);
+            if (blockCollision != null) {
+                blockCollision.correctPosition(session, iter.getX(), iter.getY(), iter.getZ(), box);
+            }
+        }
+
+        return box.getBottomCenter();
+    }
+
     @Override
     public void packetSending(MCPLPacketEvent event) {
         final CachedSession session = event.getSession();
 
         if (event.getPacket() instanceof ServerboundMovePlayerPosPacket packet) {
+            Vector3d vector3d = Vector3d.from(packet.getX() + session.getOffset().getX(),
+                    packet.getY() + session.getOffset().getY(),
+                    packet.getZ() + session.getOffset().getZ());
+            vector3d = correctPosition(session.getSession(), vector3d);
+
             event.setPacket(new ServerboundMovePlayerPosPacket(
                     packet.isOnGround(), packet.isHorizontalCollision(),
-                    packet.getX() + session.getOffset().getX(),
-                    packet.getY() + session.getOffset().getY(),
-                    packet.getZ() + session.getOffset().getZ()
+                    vector3d.getX(), vector3d.getY(), vector3d.getZ()
             ));
         }
 
         if (event.getPacket() instanceof ServerboundMovePlayerPosRotPacket packet) {
+            Vector3d vector3d = Vector3d.from(packet.getX() + session.getOffset().getX(),
+                    packet.getY() + session.getOffset().getY(),
+                    packet.getZ() + session.getOffset().getZ());
+            vector3d = correctPosition(session.getSession(), vector3d);
+
             event.setPacket(new ServerboundMovePlayerPosRotPacket(
                     packet.isOnGround(), packet.isHorizontalCollision(),
-                    packet.getX() + session.getOffset().getX(),
-                    packet.getY() + session.getOffset().getY(),
-                    packet.getZ() + session.getOffset().getZ(), packet.getYaw(), packet.getPitch()
+                    vector3d.getX(),
+                    vector3d.getY(),
+                    vector3d.getZ(), packet.getYaw(), packet.getPitch()
             ));
         }
 
