@@ -209,7 +209,7 @@ public class ClientPositionPacket implements BedrockPacketListener, JavaPacketLi
             final Vector3i newOffset = MathUtil.makeOffsetChunkSafe(Vector3d.from(realX - newX, 0, realZ - newZ));
 
             session.setOffset(newOffset);
-            if (newOffset.getX() != 0 || newOffset.getZ() != 0) { // Always priority 0 0 0 offset.
+            if (newOffset.getX() != oldOffset.getX() || newOffset.getZ() != oldOffset.getZ()) {
                 double oldOffsetX = realX - oldOffset.getX();
                 double oldOffsetZ = realZ - oldOffset.getZ();
 
