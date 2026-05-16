@@ -31,10 +31,6 @@ public final class CloudburstSendListener extends UpstreamSession {
 
     @Override
     public void sendPacket(@NonNull BedrockPacket packet) {
-        if (packet instanceof UpdateClientInputLocksPacket) { // Hacks.
-            return;
-        }
-
         final CloudburstPacketEvent event = new CloudburstPacketEvent(this.player, packet);
         for (final BedrockPacketListener listener : PacketEvents.getApi().getBedrockListeners()) {
             listener.onPacketSend(event, false);
@@ -46,11 +42,6 @@ public final class CloudburstSendListener extends UpstreamSession {
 
         if (event.getPacket() instanceof StartGamePacket start) {
             GeyserUtil.hookIntoMCPL(this.player);
-
-            // We need this to do rewind teleport.
-            start.setAuthoritativeMovementMode(AuthoritativeMovementMode.SERVER_WITH_REWIND);
-            start.setRewindHistorySize(20); // 20 ticks is enough.
-
             player.runtimeId = start.getRuntimeEntityId();
         }
 
@@ -73,5 +64,10 @@ public final class CloudburstSendListener extends UpstreamSession {
         oldSession.sendPacketImmediately(event.getPacket());
         event.getPostTasks().forEach(Runnable::run);
         event.getPostTasks().clear();
+    }
+
+    @Override
+    public int getProtocolVersion() {
+        return oldSession.getProtocolVersion();
     }
 }
