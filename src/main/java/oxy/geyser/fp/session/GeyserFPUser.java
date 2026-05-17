@@ -49,10 +49,6 @@ public class GeyserFPUser {
     public Vector3i prevPosition = Vector3i.ZERO;
 
     public void offset(Vector3i offset, boolean teleport) {
-        if (this.offset.distanceSquared(offset) < 25) {
-            return;
-        }
-
         final SessionPlayerEntity entity = this.session.getPlayerEntity();
 
         // We have to set this first regardless of teleport so the chunks so up properly.

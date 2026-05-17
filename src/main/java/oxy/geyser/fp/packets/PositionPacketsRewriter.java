@@ -78,7 +78,7 @@ public class PositionPacketsRewriter implements JavaPacketListener {
             double z = packet.getPosition().getZ() + (packet.getRelatives().contains(PositionElement.Z) ? currentPositon.getZ() : 0);
 
             final int CAPPED_VALUE = GeyserFloatingPoints.config().maxPosition();
-            if (Math.abs(x) > CAPPED_VALUE || Math.abs(z) > CAPPED_VALUE) {
+            if (Math.abs(x - user.offset().getX()) > CAPPED_VALUE || Math.abs(z - user.offset().getZ()) > CAPPED_VALUE) {
                 user.offset(MathUtil.calculateOffset(Vector3d.from(x, 0, z)), false);
             }
 
