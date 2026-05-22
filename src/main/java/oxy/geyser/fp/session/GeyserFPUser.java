@@ -105,6 +105,7 @@ public class GeyserFPUser {
 
     private boolean shouldShowCoordinates() {
         return this.offset.equals(Vector3i.ZERO)
+                // From https://github.com/GeyserMC/Geyser/blob/fc2681ada4e0b5e344d64927f978ec7ac751fea5/core/src/main/java/org/geysermc/geyser/session/cache/PreferencesCache.java#L78
                 && !session.isReducedDebugInfo()
                 && session.getGeyser().config().gameplay().showCoordinates()
                 && session.getPreferencesCache().isPrefersShowCoordinates();
