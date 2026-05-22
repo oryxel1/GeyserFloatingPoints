@@ -29,11 +29,13 @@ public class UpstreamHandlerWrapper extends UpstreamSession {
             GeyserUtil.wrapAroundSessionAdaptor(user);
         }
 
+        user.onPacketSent(packet);
         prevSession.sendPacket(packet);
     }
 
     @Override
     public void sendPacketImmediately(@NonNull BedrockPacket packet) {
+        user.onPacketSent(packet);
         prevSession.sendPacketImmediately(packet);
     }
 
@@ -42,3 +44,4 @@ public class UpstreamHandlerWrapper extends UpstreamSession {
         return prevSession.getProtocolVersion();
     }
 }
+
