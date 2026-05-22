@@ -58,7 +58,6 @@ public class UpstreamHandlerWrapper extends UpstreamSession {
                 if (!SHOW_COORDINATES_GAME_RULE.equals(rule.getName())) {
                     continue;
                 }
-
                 gameRulesPacket.getGameRules().set(i, new GameRuleData<>(SHOW_COORDINATES_GAME_RULE, false));
                 return;
             }
