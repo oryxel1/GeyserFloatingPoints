@@ -1,19 +1,10 @@
 package oxy.geyser.fp.session;
 
-import it.unimi.dsi.fastutil.objects.ObjectCollection;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.cloudburstmc.math.vector.Vector2d;
-import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
-import org.cloudburstmc.protocol.bedrock.packet.MovePlayerPacket;
-import org.geysermc.geyser.entity.EntityDefinitions;
-import org.geysermc.geyser.entity.type.BoatEntity;
-import org.cloudburstmc.protocol.bedrock.data.GameRuleData;
-import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
-import org.cloudburstmc.protocol.bedrock.packet.GameRulesChangedPacket;
 import org.geysermc.geyser.entity.type.Entity;
-import org.geysermc.geyser.entity.type.player.PlayerEntity;
 import org.geysermc.geyser.entity.type.player.SessionPlayerEntity;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.cache.EntityCache;
@@ -28,9 +19,7 @@ import java.util.Collection;
 
 @RequiredArgsConstructor
 public class GeyserFPUser {
-    private boolean geyserShowCoordinates = true;
-    private boolean currentlyHidingCoordinates = false;
-    private static final String SHOW_COORDINATES_GAME_RULE = "showcoordinates";
+    public static final String SHOW_COORDINATES_GAME_RULE = "showcoordinates";
 
     private final GeyserSession session;
     public GeyserSession session() {
@@ -104,39 +93,20 @@ public class GeyserFPUser {
         } catch (Exception ignored) {
         }
 
+        boolean wasHidingCoordinates = !this.offset.equals(Vector3i.ZERO);
         this.offset = offset;
         chunkCache.sendChunksWithOffset();
-        updateCoordinatesGameRule();
-    }
 
-    public void onPacketSent(BedrockPacket packet) {
-        if (packet instanceof GameRulesChangedPacket gameRulesPacket) {
-            for (int i = 0; i < gameRulesPacket.getGameRules().size(); i++) {
-                GameRuleData<?> rule = gameRulesPacket.getGameRules().get(i);
-                if (!rule.getName().equals(SHOW_COORDINATES_GAME_RULE)) {
-                    continue;
-                }
-                if (rule.getValue() instanceof Boolean bool && !currentlyHidingCoordinates) {
-                    geyserShowCoordinates = bool;
-                }
-                if (currentlyHidingCoordinates) {
-                    gameRulesPacket.getGameRules().set(i, new GameRuleData<>(SHOW_COORDINATES_GAME_RULE, false));
-                }
-                return;
-            }
+        boolean shouldHideCoordinates = !this.offset.equals(Vector3i.ZERO);
+        if (wasHidingCoordinates != shouldHideCoordinates) {
+            session.sendGameRule(SHOW_COORDINATES_GAME_RULE, shouldShowCoordinates());
         }
     }
 
-    private void updateCoordinatesGameRule() {
-        boolean shouldHide = !this.offset.equals(Vector3i.ZERO);
-        if (this.currentlyHidingCoordinates == shouldHide) {
-            return;
-        }
-        this.currentlyHidingCoordinates = shouldHide;
-
-        GameRulesChangedPacket packet = new GameRulesChangedPacket();
-        packet.getGameRules().add(new GameRuleData<>(SHOW_COORDINATES_GAME_RULE, geyserShowCoordinates && !shouldHide));
-        session.sendUpstreamPacket(packet);
+    private boolean shouldShowCoordinates() {
+        return this.offset.equals(Vector3i.ZERO)
+                && !session.isReducedDebugInfo()
+                && session.getGeyser().config().gameplay().showCoordinates()
+                && session.getPreferencesCache().isPrefersShowCoordinates();
     }
 }
-
