@@ -1,16 +1,10 @@
 package oxy.geyser.fp.session;
 
-import it.unimi.dsi.fastutil.objects.ObjectCollection;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.cloudburstmc.math.vector.Vector2d;
-import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
-import org.cloudburstmc.protocol.bedrock.packet.MovePlayerPacket;
-import org.geysermc.geyser.entity.EntityDefinitions;
-import org.geysermc.geyser.entity.type.BoatEntity;
 import org.geysermc.geyser.entity.type.Entity;
-import org.geysermc.geyser.entity.type.player.PlayerEntity;
 import org.geysermc.geyser.entity.type.player.SessionPlayerEntity;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.cache.EntityCache;
@@ -25,6 +19,8 @@ import java.util.Collection;
 
 @RequiredArgsConstructor
 public class GeyserFPUser {
+    public static final String SHOW_COORDINATES_GAME_RULE = "showcoordinates";
+
     private final GeyserSession session;
     public GeyserSession session() {
         return session;
@@ -97,7 +93,21 @@ public class GeyserFPUser {
         } catch (Exception ignored) {
         }
 
+        boolean wasHidingCoordinates = !this.offset.equals(Vector3i.ZERO);
         this.offset = offset;
         chunkCache.sendChunksWithOffset();
+
+        boolean shouldHideCoordinates = !this.offset.equals(Vector3i.ZERO);
+        if (wasHidingCoordinates != shouldHideCoordinates) {
+            session.sendGameRule(SHOW_COORDINATES_GAME_RULE, shouldShowCoordinates());
+        }
+    }
+
+    private boolean shouldShowCoordinates() {
+        return this.offset.equals(Vector3i.ZERO)
+                // From https://github.com/GeyserMC/Geyser/blob/fc2681ada4e0b5e344d64927f978ec7ac751fea5/core/src/main/java/org/geysermc/geyser/session/cache/PreferencesCache.java#L78
+                && !session.isReducedDebugInfo()
+                && session.getGeyser().config().gameplay().showCoordinates()
+                && session.getPreferencesCache().isPrefersShowCoordinates();
     }
 }
