@@ -17,6 +17,7 @@ import oxy.geyser.fp.network.event.JavaPacketEvent;
 import oxy.geyser.fp.network.listener.JavaPacketListener;
 import oxy.geyser.fp.session.GeyserFPUser;
 import oxy.geyser.fp.util.MathUtil;
+import oxy.geyser.fp.world.VerticalWindow;
 
 import java.lang.reflect.Field;
 
@@ -74,21 +75,24 @@ public class PositionPacketsRewriter implements JavaPacketListener {
         if (event.getPacket() instanceof ClientboundPlayerPositionPacket packet) {
             Vector3f currentPositon = entity.getPosition().add(user.offset().toFloat());
 
-            double x = packet.getPosition().getX() + (packet.getRelatives().contains(PositionElement.X) ? currentPositon.getX() : 0);
-            double z = packet.getPosition().getZ() + (packet.getRelatives().contains(PositionElement.Z) ? currentPositon.getZ() : 0);
+                double x = packet.getPosition().getX() + (packet.getRelatives().contains(PositionElement.X) ? currentPositon.getX() : 0);
+                double y = packet.getPosition().getY() + (packet.getRelatives().contains(PositionElement.Y) ? currentPositon.getY() : 0);
+                double z = packet.getPosition().getZ() + (packet.getRelatives().contains(PositionElement.Z) ? currentPositon.getZ() : 0);
 
             final int CAPPED_VALUE = GeyserFloatingPoints.config().maxPosition();
-            if (Math.abs(x - user.offset().getX()) > CAPPED_VALUE || Math.abs(z - user.offset().getZ()) > CAPPED_VALUE) {
-                user.offset(MathUtil.calculateOffset(Vector3d.from(x, 0, z)), false);
+                if (Math.abs(x - user.offset().getX()) > CAPPED_VALUE || Math.abs(z - user.offset().getZ()) > CAPPED_VALUE
+                    || shouldReOffsetY(user, y - user.offset().getY(), y)) {
+                user.offset(MathUtil.calculateOffset(Vector3d.from(x, y, z)), false);
             }
 
             // I don't want to deal with relatives.
             packet.getRelatives().remove(PositionElement.X);
+                packet.getRelatives().remove(PositionElement.Y);
             packet.getRelatives().remove(PositionElement.Z);
 
             event.setPacket(new ClientboundPlayerPositionPacket(
                     packet.getId(),
-                    x - user.offset().getX(), packet.getPosition().getY(), z - user.offset().getZ(),
+                    x - user.offset().getX(), y - user.offset().getY(), z - user.offset().getZ(),
                     packet.getDeltaMovement().getX(), packet.getDeltaMovement().getY(), packet.getDeltaMovement().getZ(),
                     packet.getYRot(), packet.getXRot(), packet.getRelatives().toArray(new PositionElement[0])
             ));
@@ -108,11 +112,24 @@ public class PositionPacketsRewriter implements JavaPacketListener {
 
         final int CAPPED_VALUE = GeyserFloatingPoints.config().maxPosition();
 
-        if (Math.abs(x) < CAPPED_VALUE && Math.abs(z) < CAPPED_VALUE) {
+        double realY = y + user.offset().getY();
+        if (Math.abs(x) < CAPPED_VALUE && Math.abs(z) < CAPPED_VALUE && !shouldReOffsetY(user, y, realY)) {
+            user.prevPosition = pos;
             return false;
         }
 
-        user.offset(MathUtil.calculateOffset(Vector3d.from(x + user.offset().getX(), 0, z + user.offset().getZ())), true);
+        user.offset(MathUtil.calculateOffset(Vector3d.from(x + user.offset().getX(), y + user.offset().getY(), z + user.offset().getZ())), true);
+        user.prevPosition = pos;
         return true;
+    }
+
+    private boolean shouldReOffsetY(GeyserFPUser user, double fakeY, double realY) {
+        if (VerticalWindow.isNativeBedrockY(realY)) {
+            return user.offset().getY() != 0;
+        }
+
+        return user.offset().getY() == 0
+                || fakeY <= VerticalWindow.reOffsetLowerBound()
+                || fakeY >= VerticalWindow.reOffsetUpperBound();
     }
 }

@@ -20,7 +20,7 @@ public class EntityPacketsRewriter implements JavaPacketListener {
             event.setPacket(new ClientboundAddEntityPacket(
                     packet.getEntityId(), packet.getUuid(), packet.getType(), packet.getData(),
                     packet.getX() - user.offset().getX(),
-                    packet.getY(),
+                    packet.getY() - user.offset().getY(),
                     packet.getZ() - user.offset().getZ(),
                     packet.getMovement(), packet.getYaw(), packet.getHeadYaw(), packet.getPitch()
             ));

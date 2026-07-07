@@ -37,6 +37,39 @@ public class GeyserFPUser {
         return this.chunkCache;
     }
 
+    private int originalChunkHeightY = -1;
+    private int originalMinY = 0;
+    public int originalChunkHeightY() { return this.originalChunkHeightY; }
+    public int originalMinY() { return this.originalMinY; }
+    public void storeOriginalWorldHeight(int chunkHeightY, int minY) {
+        if (this.originalChunkHeightY == -1) {
+            this.originalChunkHeightY = chunkHeightY;
+            this.originalMinY = minY;
+        }
+    }
+
+    private int geyserOriginalMinY = Integer.MIN_VALUE;
+    private int geyserOriginalHeightY = 0;
+    public void saveGeyserOriginalValues(int minY, int heightY) {
+        if (this.geyserOriginalMinY == Integer.MIN_VALUE) {
+            this.geyserOriginalMinY = minY;
+            this.geyserOriginalHeightY = heightY;
+        }
+    }
+    public void restoreGeyserOriginalValues() {
+        if (this.geyserOriginalMinY != Integer.MIN_VALUE) {
+            this.session.getChunkCache().setMinY(this.geyserOriginalMinY);
+            this.session.getChunkCache().setHeightY(this.geyserOriginalHeightY);
+        }
+    }
+
+    public void resetWorldHeight() {
+        this.originalChunkHeightY = -1;
+        this.originalMinY = 0;
+        this.offset = Vector3i.ZERO;
+        this.prevPosition = Vector3i.ZERO;
+    }
+
     private Vector3i offset = Vector3i.from(0, 0 ,0);
     public Vector3i offset() {
         return offset;
