@@ -7,6 +7,8 @@ import org.geysermc.geyser.session.cache.registry.JavaRegistries;
 import org.geysermc.mcprotocollib.protocol.codec.MinecraftTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.ChunkSection;
 import org.geysermc.mcprotocollib.protocol.data.game.level.block.BlockChangeEntry;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundLoginPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundRespawnPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.*;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.border.ClientboundInitializeBorderPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.border.ClientboundSetBorderCenterPacket;
@@ -20,6 +22,10 @@ import java.util.List;
 public class WorldPacketsRewriter implements JavaPacketListener {
     @Override
     public void onReceived(GeyserFPUser user, JavaPacketEvent event) {
+        if (event.getPacket() instanceof ClientboundLoginPacket || event.getPacket() instanceof ClientboundRespawnPacket) {
+            user.chunkCache().clear();
+        }
+
         if (event.getPacket() instanceof ClientboundSetBorderCenterPacket packet) {
             event.setPacket(new ClientboundSetBorderCenterPacket(packet.getNewCenterX() - user.offset().getX(), packet.getNewCenterZ() - user.offset().getZ()));
         }
