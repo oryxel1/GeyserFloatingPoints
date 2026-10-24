@@ -146,6 +146,11 @@ public class ChunkCache {
         this.chunkPackets.remove(chunkPosition);
     }
 
+    public void clear() {
+        this.chunks.clear();
+        this.chunkPackets.clear();
+    }
+
     public int getMinY() {
         return (user.session().getChunkCache().getChunkMinY() << 4);
     }
