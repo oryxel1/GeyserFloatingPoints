@@ -31,23 +31,15 @@ public class WorldPacketsRewriter implements JavaPacketListener {
         }
 
         if (event.getPacket() instanceof ClientboundInitializeBorderPacket packet) {
-            event.setPacket(new ClientboundInitializeBorderPacket(
-                    packet.getNewCenterX() - user.offset().getX(), packet.getNewCenterZ() - user.offset().getZ(),
-                    packet.getOldSize(),
-                    packet.getNewSize(),
-                    packet.getLerpTime(),
-                    packet.getNewAbsoluteMaxSize(),
-                    packet.getWarningBlocks(),
-                    packet.getWarningTime()
-            ));
+            event.setPacket(packet.withNewCenterX(packet.getNewCenterX() - user.offset().getX()).withNewCenterZ(packet.getNewCenterZ() - user.offset().getZ()));
         }
 
         if (event.getPacket() instanceof ClientboundBlockEntityDataPacket packet) {
-            event.setPacket(new ClientboundBlockEntityDataPacket(packet.getPosition().sub(user.offset()), packet.getType(), packet.getNbt()));
+            event.setPacket(packet.withPosition(packet.getPosition().sub(user.offset())));
         }
 
         if (event.getPacket() instanceof ClientboundBlockEventPacket packet) {
-            event.setPacket(new ClientboundBlockEventPacket(packet.getPosition().sub(user.offset()), packet.getRawType(), packet.getRawValue(), packet.getType(), packet.getValue(), packet.getBlockId()));
+            event.setPacket(packet.withPosition(packet.getPosition().sub(user.offset())));
         }
 
         if (event.getPacket() instanceof ClientboundSetChunkCacheCenterPacket packet) {

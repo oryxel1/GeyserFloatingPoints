@@ -1,6 +1,5 @@
 package oxy.geyser.fp.packets;
 
-import org.cloudburstmc.math.vector.Vector3d;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.metadata.EntityMetadata;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.metadata.MetadataTypes;
@@ -17,13 +16,7 @@ public class EntityPacketsRewriter implements JavaPacketListener {
     @Override
     public void onReceived(GeyserFPUser user, JavaPacketEvent event) {
         if (event.getPacket() instanceof ClientboundAddEntityPacket packet) {
-            event.setPacket(new ClientboundAddEntityPacket(
-                    packet.getEntityId(), packet.getUuid(), packet.getType(), packet.getData(),
-                    packet.getX() - user.offset().getX(),
-                    packet.getY(),
-                    packet.getZ() - user.offset().getZ(),
-                    packet.getMovement(), packet.getYaw(), packet.getHeadYaw(), packet.getPitch()
-            ));
+            event.setPacket(packet.withX(packet.getX() - user.offset().getX()).withZ(packet.getZ() - user.offset().getZ()));
         }
 
         if (event.getPacket() instanceof ClientboundSetEntityDataPacket packet) {
@@ -54,15 +47,11 @@ public class EntityPacketsRewriter implements JavaPacketListener {
         }
 
         if (event.getPacket() instanceof ClientboundEntityPositionSyncPacket packet) {
-            event.setPacket(new ClientboundEntityPositionSyncPacket(
-                    packet.getId(), packet.getPosition().sub(user.offset().toDouble()),
-                    packet.getDeltaMovement(), packet.getYRot(), packet.getXRot(), packet.isOnGround()
-            ));
+            event.setPacket(packet.withEndPosition(packet.getEndPosition().sub(user.offset().toDouble())));
         }
 
         if (event.getPacket() instanceof ClientboundMoveVehiclePacket packet) {
-            event.setPacket(new ClientboundMoveVehiclePacket(packet.getPosition().sub(user.offset().toDouble()),
-                    packet.getYRot(), packet.getXRot()));
+            event.setPacket(packet.withPosition(packet.getPosition().sub(user.offset().toDouble())));
         }
     }
 }
