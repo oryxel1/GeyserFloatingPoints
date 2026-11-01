@@ -1,5 +1,6 @@
 package oxy.geyser.fp.packets;
 
+import org.cloudburstmc.math.vector.Vector3d;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.metadata.EntityMetadata;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.metadata.MetadataTypes;
@@ -10,6 +11,7 @@ import oxy.geyser.fp.network.listener.JavaPacketListener;
 import oxy.geyser.fp.session.GeyserFPUser;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class EntityPacketsRewriter implements JavaPacketListener {
@@ -47,7 +49,16 @@ public class EntityPacketsRewriter implements JavaPacketListener {
         }
 
         if (event.getPacket() instanceof ClientboundEntityPositionSyncPacket packet) {
-            event.setPacket(packet.withEndPosition(packet.getEndPosition().sub(user.offset().toDouble())));
+            Vector3d offset = user.offset().toDouble();
+            if (packet.isStepped()) {
+                List<ClientboundEntityPositionSyncPacket.PositionStep> steps = new ArrayList<>(packet.getSteps().size());
+                for (ClientboundEntityPositionSyncPacket.PositionStep step : packet.getSteps()) {
+                    steps.add(new ClientboundEntityPositionSyncPacket.PositionStep(step.position().sub(offset), step.tickOffset()));
+                }
+                event.setPacket(packet.withSteps(steps));
+            } else {
+                event.setPacket(packet.withEndPosition(packet.getEndPosition().sub(offset)));
+            }
         }
 
         if (event.getPacket() instanceof ClientboundMoveVehiclePacket packet) {
